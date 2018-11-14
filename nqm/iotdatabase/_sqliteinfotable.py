@@ -1,14 +1,13 @@
 """ Manages the info table in a dataset
 """
 import sys
-if sys.version_info >= (3, 7):
-    from __future__ import annotations
-
 import typing
 import sqlite3
-
 import _sqliteschemaconverter
 import _sqliteconstants
+
+if sys.version_info >= (3, 7):
+    from __future__ import annotations
 
 DATABASE_INFO_TABLE_NAME = "info"
 
@@ -28,5 +27,5 @@ def checkInfoTable(db: sqlite3.Connection) -> bool:
 def getInfoKeys(
     db: sqlite3.Connection, keys: typing.Iterable[str]
 ) -> typing.Iterable[typing.Mapping[str]]:
-    _sqliteschemaconverter.convertToSqlite(_sqliteconstants.SQLITE_TYPE_TEXT)
+    _sqliteschemaconverter.convertToSqlite(_sqliteconstants.SQLITE.TYPE.TEXT)
     pass

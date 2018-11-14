@@ -1,4 +1,18 @@
+import sys
+if sys.version_info >= (3, 7):
+    from __future__ import annotations
 import urllib.parse
+import os
+import enum
+class DbTypeEnum(enum.Enum):
+    memory = "memory"
+    file = "file"
+
+class DbModeEnum(enum.Enum):
+    readonly = "r"
+    readwrite = "rw"
+    readwrite2 = "wr"
+    readwritecreate = "w+"
 
 def sqliteURI(
     path: os.PathLike,

@@ -5,21 +5,10 @@ if sys.version_info >= (3, 7):
     from __future__ import annotations
 
 import typings
-import enum
 import os
 import _sqliteutils
 import _sqliteinfotable
 import sqlite3
-
-class DbTypeEnum(enum):
-    memory = "memory"
-    file = "file"
-
-class DbModeEnum(enum):
-    readonly = "r"
-    readwrite = "rw"
-    readwrite2 = "wr"
-    readwritecreate = "w+"
 
 class Database(object):
     def __init__(self,
