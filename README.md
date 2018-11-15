@@ -16,5 +16,5 @@ pipenv run python -m pytest
 ### Typetests
 
 ```bash
-pipenv run mypy --namespace-packages --warn-redundant-casts --warn-unused-ignores --warn-return-any -m nqm.iotdatabase._sqliteschemaconverter
+pipenv run mypy -m nqm.iotdatabase._sqliteschemaconverter && echo -e "\e[1;32mPass! \e[0m"
 ```
