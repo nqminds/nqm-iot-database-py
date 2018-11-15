@@ -100,8 +100,8 @@ def _convertSchemaOne(value: t.Union[t.Sequence, t.Mapping]
             return _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT
 
 def convertSchema(schema: t.Mapping[
-    str, t.Union[t.Sequence, t.Mapping]]
-) -> t.Dict[str, general_sqlite_types]:
+    t.Text, t.Union[t.Sequence, t.Mapping]]
+) -> t.Dict[t.Text, general_sqlite_types]:
     """Converts a tdx schema into a sqlite schema.
     
     """
@@ -131,14 +131,14 @@ def convertToSqlite(
     fixed_type = _toGeneralSqliteType(type)
 
     if only_stringify:
-        def to_text(value):
+        def to_text(value) -> t.Text:
             return str(value)
     else:
-        def to_text(value):
+        def to_text(value) -> t.Text:
             # escape ' and quote
             return "'{}'".format(str(value).replace("'", "''"))
 
-    def jsonify(value):
+    def jsonify(value) -> t.Text:
         return to_text(json.dumps(value))
 
     converter: t.Dict[general_sqlite_types, t.Callable] = {
@@ -155,7 +155,7 @@ def convertToSqlite(
 json_types = t.Union[int, float, t.List, t.Dict, t.Text]
 def convertToTdx(
     type: general_sqlite_types_or_str,
-    value: str
+    value: t.Text
 ) -> json_types:
     """Converts a sqlite value to a tdx value based on a sqlite type.
 
