@@ -23,9 +23,12 @@ general_sqlite_types_or_str = t.Union[
     _sqliteconstants.SQLITE_GENERAL_TYPE,
     t.Text,
 ]
-# types that can be JSON.stringified
+# types that can be JSON.dumps
 jsonifiable_types = t.Union[
-    float, int, t.Text, numbers.Real, t.Mapping, t.Sequence]
+    float, int, t.Text, numbers.Real, t.Mapping, t.Sequence, bool, None]
+
+# json.loads could also return a bool but we don't store any
+json_types = t.Union[int, float, t.List, t.Dict, t.Text, None]
 
 def getBasicType(tdx_types: t.Sequence[
     t.Union[TDX_TYPE, t.Text]
@@ -154,7 +157,6 @@ def convertToSqlite(
 
     return converter[fixed_type](value) # type: ignore
 
-json_types = t.Union[int, float, t.List, t.Dict, t.Text]
 def convertToTdx(
     type: general_sqlite_types_or_str,
     value: t.Text
