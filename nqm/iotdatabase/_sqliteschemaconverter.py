@@ -43,12 +43,15 @@ def getBasicType(tdx_types: t.Sequence[
     tdx_base_type = TDX_TYPE(tdx_base_type)
 
     def number():
-        tdx_derived_type = tdx_types[1]
-        if TDX_TYPE.INT in tdx_derived_type:
+        tdx_derived_type = tdx_types[1].upper() if len(tdx_types) > 1 else None
+        if tdx_derived_type is None:
+            pass
+        elif TDX_TYPE.INT.value in str(tdx_derived_type):
             return SQLITE_TYPE.INTEGER
-        elif TDX_TYPE.REAL.match(tdx_derived_type):
+        elif TDX_TYPE.REAL.value.match(tdx_derived_type):
             return SQLITE_TYPE.REAL
-        else: return SQLITE_TYPE.TEXT
+
+        return SQLITE_TYPE.NUMERIC
 
     mapping: t.Dict[TDX_TYPE, t.Callable[[], SQLITE_TYPE]] = {
         TDX_TYPE.STRING: lambda: SQLITE_TYPE.TEXT,
@@ -57,15 +60,15 @@ def getBasicType(tdx_types: t.Sequence[
         TDX_TYPE.NUMBER: number
     }
 
-    return mapping.get(tdx_base_type, default=lambda: SQLITE_TYPE.TEXT)()
+    return mapping.get(tdx_base_type, lambda: SQLITE_TYPE.TEXT)()
 
 def _toGeneralSqliteType(general_sqlite_type: general_sqlite_types_or_str
 ) -> general_sqlite_types:
     """Converts a string to the enum types"""
     try:
-        return SQLITE_TYPE(type)
+        return SQLITE_TYPE(general_sqlite_type)
     except ValueError:
-        return _sqliteconstants.SQLITE_GENERAL_TYPE(type)
+        return _sqliteconstants.SQLITE_GENERAL_TYPE(general_sqlite_type)
 
 def _mapVal(type: general_sqlite_types_or_str) -> SQLITE_TYPE:
     """Maps a general sqlite type to a valid sqlite type"""
@@ -93,7 +96,7 @@ def _convertSchemaOne(value: t.Union[t.Sequence, t.Mapping]
     if isinstance(value, collections.Sequence):
         return _sqliteconstants.SQLITE_GENERAL_TYPE.ARRAY
     elif isinstance(value, collections.Mapping):
-        real_type = value.get(TDX_TYPE.NAME, default=None)
+        real_type = value.get(str(TDX_TYPE.NAME), None)
         if real_type is not None:
             return getBasicType(real_type)
         else:
@@ -103,7 +106,6 @@ def convertSchema(schema: t.Mapping[
     t.Text, t.Union[t.Sequence, t.Mapping]]
 ) -> t.Dict[t.Text, general_sqlite_types]:
     """Converts a tdx schema into a sqlite schema.
-    
     """
     return {name: _convertSchemaOne(value) for name, value in schema.items()}
 

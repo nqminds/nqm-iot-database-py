@@ -14,7 +14,7 @@ class TDX_TYPE(ConstEnum):
     STRING = "string"
     BOOLEAN = "boolean"
     INT = "INT"
-    REAL = re.compile("/*REAL|FLOA|DOUB")
+    REAL = re.compile(r"REAL|FLOA|DOUB")
     DATE = "date"
 
 class SQLITE_TYPE(ConstEnum):
