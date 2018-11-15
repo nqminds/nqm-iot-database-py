@@ -1,33 +1,34 @@
 """Module to convert a tdx schema into a sqlite schema.
 """
-import typing
+import typing as t
 import numbers
 import nqm.iotdatabase._sqliteconstants as _sqliteconstants
 import json
 import collections
 
 SQLITE_TYPE = _sqliteconstants.SQLITE_TYPE
+TDX_TYPE = _sqliteconstants.TDX_TYPE
 
 # types that can be inserted in SQLite
-sqlite_types = typing.Union[int, float, typing.Text, numbers.Real]
+sqlite_types = t.Union[int, float, t.Text, numbers.Real]
 
 # type of storage of general SQLite types or SQLite types.
-general_sqlite_types = typing.Union[
+general_sqlite_types = t.Union[
     SQLITE_TYPE,
     _sqliteconstants.SQLITE_GENERAL_TYPE
 ]
 # type of storage of general SQLite types or SQLite types or str
-general_sqlite_types_or_str = typing.Union[
+general_sqlite_types_or_str = t.Union[
     SQLITE_TYPE,
     _sqliteconstants.SQLITE_GENERAL_TYPE,
-    typing.Text,
+    t.Text,
 ]
 # types that can be JSON.stringified
-jsonifiable_types = typing.Union[
-    float, int, typing.Text, numbers.Real, typing.Mapping, typing.Sequence]
+jsonifiable_types = t.Union[
+    float, int, t.Text, numbers.Real, t.Mapping, t.Sequence]
 
-def getBasicType(tdx_types: typing.Sequence[
-    typing.Union[_sqliteconstants.TDX_TYPE, typing.Text]
+def getBasicType(tdx_types: t.Sequence[
+    t.Union[TDX_TYPE, t.Text]
 ]) -> SQLITE_TYPE:
     """Returns a basic SQLite type from a list of tdx types.
 
@@ -37,14 +38,9 @@ def getBasicType(tdx_types: typing.Sequence[
         The SQLite basic type.
     """
     tdx_base_type = tdx_types[0]
-    try:
+    if isinstance(tdx_base_type, str):
         tdx_base_type = tdx_base_type.lower() # make sure we are using lowercase
-    except:
-        pass
-    tdx_base_type = _sqliteconstants.TDX_TYPE(tdx_base_type)
-    
-    TDX_TYPE = _sqliteconstants.TDX_TYPE
-    SQLITE_TYPE = SQLITE_TYPE
+    tdx_base_type = TDX_TYPE(tdx_base_type)
 
     def number():
         tdx_derived_type = tdx_types[1]
@@ -54,14 +50,14 @@ def getBasicType(tdx_types: typing.Sequence[
             return SQLITE_TYPE.REAL
         else: return SQLITE_TYPE.TEXT
 
-    mapping: typing.Dict[TDX_TYPE, typing.Callable[[], SQLITE_TYPE]] = {
+    mapping: t.Dict[TDX_TYPE, t.Callable[[], SQLITE_TYPE]] = {
         TDX_TYPE.STRING: lambda: SQLITE_TYPE.TEXT,
         TDX_TYPE.BOOLEAN: lambda: SQLITE_TYPE.NUMERIC,
         TDX_TYPE.DATE: lambda: SQLITE_TYPE.NUMERIC,
         TDX_TYPE.NUMBER: number
     }
 
-    return mapping.get(tdx_base_type, d=lambda: SQLITE_TYPE.TEXT)()
+    return mapping.get(tdx_base_type, default=lambda: SQLITE_TYPE.TEXT)()
 
 def _toGeneralSqliteType(general_sqlite_type: general_sqlite_types_or_str
 ) -> general_sqlite_types:
@@ -79,8 +75,8 @@ def _mapVal(type: general_sqlite_types_or_str) -> SQLITE_TYPE:
     else:
         return enum_type
 
-def mapSchema(types: typing.Mapping[typing.Text, general_sqlite_types_or_str]
-) -> typing.Dict[typing.Text, SQLITE_TYPE]:
+def mapSchema(types: t.Mapping[t.Text, general_sqlite_types_or_str]
+) -> t.Dict[t.Text, SQLITE_TYPE]:
     """Maps a general sqlite schema type into a valid sqlite schema.
 
     Args:
@@ -91,21 +87,21 @@ def mapSchema(types: typing.Mapping[typing.Text, general_sqlite_types_or_str]
     """
     return {name: _mapVal(val) for name, val in types.items()}
 
-def _convertSchemaOne(value: typing.Union[typing.Sequence, typing.Mapping]
+def _convertSchemaOne(value: t.Union[t.Sequence, t.Mapping]
 ) -> general_sqlite_types:
     """Used in convertSchema"""
     if isinstance(value, collections.Sequence):
         return _sqliteconstants.SQLITE_GENERAL_TYPE.ARRAY
     elif isinstance(value, collections.Mapping):
-        real_type = value.get(_sqliteconstants.TDX_TYPE.NAME, d=None)
+        real_type = value.get(TDX_TYPE.NAME, default=None)
         if real_type is not None:
             return getBasicType(real_type)
         else:
             return _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT
 
-def convertSchema(schema: typing.Mapping[
-    str, typing.Union[typing.Sequence, typing.Mapping]]
-) -> typing.Dict[str, general_sqlite_types]:
+def convertSchema(schema: t.Mapping[
+    str, t.Union[t.Sequence, t.Mapping]]
+) -> t.Dict[str, general_sqlite_types]:
     """Converts a tdx schema into a sqlite schema.
     
     """
@@ -113,7 +109,7 @@ def convertSchema(schema: typing.Mapping[
 
 def convertToSqlite(
     type: general_sqlite_types_or_str,
-    value: typing.Any,
+    value: t.Any,
     only_stringify: bool = False
 ) -> sqlite_types:
     """Converts a tdx value to a sqlite value based on a sqlite type.
@@ -145,7 +141,7 @@ def convertToSqlite(
     def jsonify(value):
         return to_text(json.dumps(value))
 
-    converter = {
+    converter: t.Dict[general_sqlite_types, t.Callable] = {
         SQLITE_TYPE.INTEGER: int,
         SQLITE_TYPE.REAL: float,
         SQLITE_TYPE.NUMERIC: float,
@@ -154,12 +150,13 @@ def convertToSqlite(
         _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT: jsonify
     }
 
-    return converter[fixed_type](value)
+    return converter[fixed_type](value) # type: ignore
 
+json_types = t.Union[int, float, t.List, t.Dict, t.Text]
 def convertToTdx(
     type: general_sqlite_types_or_str,
     value: str
-) -> typing.Union[int, float, list, dict, str]:
+) -> json_types:
     """Converts a sqlite value to a tdx value based on a sqlite type.
 
     Args:
@@ -172,7 +169,7 @@ def convertToTdx(
 
     fixed_type = _toGeneralSqliteType(type)
 
-    converter = {
+    converter: t.Dict[general_sqlite_types, t.Callable] = {
         SQLITE_TYPE.INTEGER: int,
         SQLITE_TYPE.REAL: float,
         SQLITE_TYPE.NUMERIC: float,
@@ -181,4 +178,4 @@ def convertToTdx(
         _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT: json.loads
     }
 
-    return converter[fixed_type](value)
+    return converter[fixed_type](value) # type: ignore
