@@ -4,6 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+sqlalchemy = "*"
+mongosql = {git = "https://github.com/dignio/py-mongosql.git"}
 
 [dev-packages]
 pytest = "*"
