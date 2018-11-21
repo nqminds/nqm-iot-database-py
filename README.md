@@ -13,6 +13,12 @@ Python port of
 pipenv run python -m pytest
 ```
 
+### Unittests Coverage
+
+```bash
+pipenv run coverage run --source=nqm -m pytest && pipenv run coverage report
+```
+
 ### Typetests
 
 ```bash

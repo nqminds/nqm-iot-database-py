@@ -10,6 +10,7 @@ mongosql = {git = "https://github.com/dignio/py-mongosql.git"}
 [dev-packages]
 pytest = "*"
 mypy = "*"
+coverage = "*"
 
 [requires]
 python_version = "3.6"
