@@ -36,6 +36,8 @@ def sqliteURI(
         DbModeEnum.readwrite2: "rw",
         DbModeEnum.readwritecreate: "rwc"
     }
+    dbType = DbTypeEnum(type)
+    dbMode = DbModeEnum(mode)
     return urllib.parse.urlunparse(urllib.parse.ParseResult(
         scheme="file",
         netloc="",
@@ -43,8 +45,9 @@ def sqliteURI(
         params="",
         query=urllib.parse.urlencode({
             # set mode to memory in type is memory, else use the types
-            mode: modeMap[type] if type in modeMap else modeMap[mode]
-        })
+            "mode": modeMap[dbType] if dbType in modeMap else modeMap[dbMode]
+        }),
+        fragment=""
     ))
 
 def escapeIdentifier(identifier: typing.Text) -> typing.Text:
