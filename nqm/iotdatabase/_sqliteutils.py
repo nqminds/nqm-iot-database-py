@@ -5,6 +5,7 @@ import enum
 import typing
 import re
 from nqm.iotdatabase._sqliteconstants import ConstEnum
+import sqlalchemy.engine.url
 
 class DbTypeEnum(ConstEnum):
     memory = "memory"
@@ -19,7 +20,8 @@ class DbModeEnum(ConstEnum):
 def sqliteURI(
     path: typing.Union[os.PathLike, typing.Text] = None,
     type: typing.Union[DbTypeEnum, typing.Text] = DbTypeEnum.file,
-    mode: typing.Union[DbModeEnum, typing.Text] = DbModeEnum.readwrite):
+    mode: typing.Union[DbModeEnum, typing.Text] = DbModeEnum.readwritecreate
+) -> typing.Text:
     """ Creates a URI for opening an SQLite Connection
 
     See https://www.sqlite.org/uri.html
@@ -49,6 +51,24 @@ def sqliteURI(
         }),
         fragment=""
     ))
+
+def sqlAlchemyURL(
+    path: typing.Union[os.PathLike, typing.Text] = None,
+    type: typing.Union[DbTypeEnum, typing.Text] = DbTypeEnum.file,
+    mode: typing.Union[DbModeEnum, typing.Text] = DbModeEnum.readwritecreate
+) -> sqlalchemy.engine.url.URL:
+    """ Creates an SQLAlchemy URL for opening an SQLite Connection
+    """
+    dbType = DbTypeEnum(type)
+    dbMode = DbModeEnum(mode)
+    if dbMode is not DbModeEnum.readwritecreate:
+        raise NotImplementedError(
+            "There is currently no way to set open modes in SQLAlchemy.")
+
+    return sqlalchemy.engine.url.URL(
+        drivername="sqlite",
+        database=":memory:" if dbType is DbTypeEnum.memory else str(path)
+    )
 
 def escapeIdentifier(identifier: typing.Text) -> typing.Text:
     """Escapes an SQLite Identifier, e.g. a column name.

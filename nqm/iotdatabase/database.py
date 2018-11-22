@@ -36,4 +36,4 @@ class Database(object):
         id = shortid.generate()
         schema = dict()
         if _sqliteinfotable.checkInfoTable(connection):
-            
+            pass

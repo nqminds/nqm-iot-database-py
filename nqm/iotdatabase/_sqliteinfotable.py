@@ -19,8 +19,9 @@ Base = sqlalchemy.ext.declarative.declarative_base(cls=(mongosql.MongoSqlBase,))
 class Info(Base):
     __tablename__ = DATABASE_INFO_TABLE_NAME
     # need to set quote=True else key might be converted to KEY
-    key = sqlalchemy.Column(sqlalchemy.String, primary_key=True, quote=True),
-    value = sqlalchemy.Column(sqlalchemy.String, quote=True)
+    key = sqlalchemy.Column(sqlalchemy.String, name="key",
+        primary_key=True, quote=True)
+    value = sqlalchemy.Column(sqlalchemy.String, name="value", quote=True)
 
 info_table = Info.__table__
 
@@ -48,10 +49,16 @@ def getInfoKeys(
 
 def setInfoKeys(
     db: sqlalchemy.engine.Engine,
-    keys: typing.Mapping[typing.Text, typing.Text]):
-    conn = db.connect()
-    conn.execute(
-        info_table.insert(),
-        [{"key": key, "value": value} for key, value in keys.items()]
-    )
-    conn.close()
+    keys: typing.Mapping[typing.Text, typing.Text]
+) -> typing.Dict["count", int]:
+    rowcount = 0
+    # if empty keys do nothing
+    if len(keys) > 0:
+        conn = db.connect()
+        res = conn.execute(
+            info_table.insert(),
+            [{"key": key, "value": value} for key, value in keys.items()]
+        )
+        rowcount = res.rowcount
+        conn.close()
+    return {"count": rowcount}
