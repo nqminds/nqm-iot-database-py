@@ -1,6 +1,10 @@
 import pytest
 import nqm.iotdatabase._sqliteinfotable as infotable
 import sqlalchemy.exc
+import pathlib
+import json
+import itertools
+import functools
 
 @pytest.fixture
 def in_mem_db():
@@ -26,17 +30,23 @@ def test_createInfoTable(in_mem_db):
     ):
         infotable.createInfoTable(in_mem_db)
 
-key_parametrize = pytest.mark.parametrize(
+def json_keys(jsonfilepath="infokeys.json"):
+    with pathlib.Path(__file__).with_name(jsonfilepath).open() as jsonfile:
+        return json.load(jsonfile)
+
+key_parametrize = lambda: pytest.mark.parametrize(
     argnames="keys",
-    argvalues=[
-        {},
-        {"hi": "test"},
-    ])
-    
-@key_parametrize
+    argvalues=itertools.chain(
+        [{}, {"hi": "test"}],
+        json_keys(),
+        [functools.reduce(lambda x, y: x.update(y) or x, json_keys(), dict())],
+    )
+)
+
+@key_parametrize()
 def test_setInfoKeys(blank_table, keys):
     assert infotable.setInfoKeys(blank_table, keys) == {"count": len(keys)}
 
-@key_parametrize
+@key_parametrize()
 def test_getInfoKeys(blank_table, keys):
     pass

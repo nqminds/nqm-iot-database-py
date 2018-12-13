@@ -9,10 +9,12 @@ import sqlalchemy
 import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 import mongosql
-import nqm.iotdatabase._sqliteschemaconverter as _sqliteschemaconverter
+from nqm.iotdatabase._sqliteschemaconverter import convertToSqlite, convertToTdx
 import nqm.iotdatabase._sqliteconstants as _sqliteconstants
 
-DATABASE_INFO_TABLE_NAME = "info"
+DATABASE_INFO_TABLE_NAME = _sqliteconstants.DATABASE_INFO_TABLE_NAME
+SQLITE_TXT = _sqliteconstants.SQLITE_TYPE.TEXT
+SQLITE_OBJ = _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT
 
 Base = sqlalchemy.ext.declarative.declarative_base(cls=(mongosql.MongoSqlBase,))
 
@@ -52,12 +54,16 @@ def setInfoKeys(
     keys: typing.Mapping[typing.Text, typing.Text]
 ) -> typing.Dict["count", int]:
     rowcount = 0
+    sqlite_keys = {
+        convertToSqlite(SQLITE_TXT, key):
+            convertToSqlite(SQLITE_OBJ, val)
+        for key, val in keys.items()}
     # if empty keys do nothing
     if len(keys) > 0:
         conn = db.connect()
         res = conn.execute(
             info_table.insert(),
-            [{"key": key, "value": value} for key, value in keys.items()]
+            [{"key": key, "value": value} for key, value in sqlite_keys.items()]
         )
         rowcount = res.rowcount
         conn.close()
