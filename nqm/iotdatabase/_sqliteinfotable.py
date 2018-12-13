@@ -35,7 +35,7 @@ def checkInfoTable(db: sqlalchemy.engine.Engine) -> bool:
     """Checks if info table exists.
 
     Args:
-        db: The sqlite3 db connection from module sqlite3
+        db: The sqlite3 db Engine from sqlalchemy
     """
     return info_table.exists(db)
 
@@ -43,6 +43,14 @@ def getInfoKeys(
     db: sqlalchemy.engine.Engine,
     keys: typing.Iterable[typing.Text]
 ) -> typing.Dict[typing.Text, typing.Text]:
+    """Gets some rows from the info table.
+
+    Args:
+        db: The sqlite3 db Engine from sqlalchemy
+        keys: A list of the primary keys of the row you want to get
+    Returns:
+        A dict of the row keys to the rows
+    """
     session = sqlalchemy.orm.session.Session(db)
     query = Info.mongoquery(session.query(Info.key, Info.value)).filter(
         {"keys": {"$in": keys}}
@@ -55,9 +63,9 @@ def setInfoKeys(
 ) -> typing.Dict["count", int]:
     rowcount = 0
     sqlite_keys = {
-        convertToSqlite(SQLITE_TXT, key):
-            convertToSqlite(SQLITE_OBJ, val)
-        for key, val in keys.items()}
+        convertToSqlite(SQLITE_TXT, key): convertToSqlite(SQLITE_OBJ, val)
+        for key, val in keys.items()
+    }
     # if empty keys do nothing
     if len(keys) > 0:
         conn = db.connect()

@@ -10,25 +10,30 @@ SQLITE_TYPE = _sqliteconstants.SQLITE_TYPE
 TDX_TYPE = _sqliteconstants.TDX_TYPE
 
 # types that can be inserted in SQLite
-sqlite_types = t.Union[int, float, t.Text, numbers.Real]
+SQLVal = t.Union[int, float, t.Text, numbers.Real]
 
 # type of storage of general SQLite types or SQLite types.
-general_sqlite_types = t.Union[
+GeneralSQLiteVal = t.Union[
     SQLITE_TYPE,
     _sqliteconstants.SQLITE_GENERAL_TYPE
 ]
 # type of storage of general SQLite types or SQLite types or str
-general_sqlite_types_or_str = t.Union[
+GeneralSQLOrStr = t.Union[
     SQLITE_TYPE,
     _sqliteconstants.SQLITE_GENERAL_TYPE,
     t.Text,
 ]
 # types that can be JSON.dumps
-jsonifiable_types = t.Union[
+JSONable = t.Union[
     float, int, t.Text, numbers.Real, t.Mapping, t.Sequence, bool, None]
 
 # json.loads could also return a bool but we don't store any
-json_types = t.Union[int, float, t.List, t.Dict, t.Text, None]
+JSONified = t.Union[int, float, t.List, t.Dict, t.Text, None]
+
+# general schema type
+GeneralSchema =  t.Dict[t.Text, GeneralSQLiteVal]
+# tdx schema type
+TDXSchema = t.Mapping[t.Text, t.Union[t.Sequence, t.Mapping]]
 
 def getBasicType(tdx_types: t.Sequence[
     t.Union[TDX_TYPE, t.Text]
@@ -65,23 +70,23 @@ def getBasicType(tdx_types: t.Sequence[
 
     return mapping.get(tdx_base_type, lambda: SQLITE_TYPE.TEXT)()
 
-def _toGeneralSqliteType(general_sqlite_type: general_sqlite_types_or_str
-) -> general_sqlite_types:
+def _toGeneralSqliteValType(general_sqlite_type: GeneralSQLOrStr
+) -> GeneralSQLiteVal:
     """Converts a string to the enum types"""
     try:
         return SQLITE_TYPE(general_sqlite_type)
     except ValueError:
         return _sqliteconstants.SQLITE_GENERAL_TYPE(general_sqlite_type)
 
-def _mapVal(type: general_sqlite_types_or_str) -> SQLITE_TYPE:
+def _mapVal(type: GeneralSQLOrStr) -> SQLITE_TYPE:
     """Maps a general sqlite type to a valid sqlite type"""
-    enum_type = _toGeneralSqliteType(type)
+    enum_type = _toGeneralSqliteValType(type)
     if isinstance(enum_type, _sqliteconstants.SQLITE_GENERAL_TYPE):
         return SQLITE_TYPE.TEXT # arrays and objects are jsonified
     else:
         return enum_type
 
-def mapSchema(types: t.Mapping[t.Text, general_sqlite_types_or_str]
+def mapSchema(types: t.Mapping[t.Text, GeneralSQLOrStr]
 ) -> t.Dict[t.Text, SQLITE_TYPE]:
     """Maps a general sqlite schema type into a valid sqlite schema.
 
@@ -94,7 +99,7 @@ def mapSchema(types: t.Mapping[t.Text, general_sqlite_types_or_str]
     return {name: _mapVal(val) for name, val in types.items()}
 
 def _convertSchemaOne(value: t.Union[t.Sequence, t.Mapping]
-) -> general_sqlite_types:
+) -> GeneralSQLiteVal:
     """Used in convertSchema"""
     if isinstance(value, collections.Sequence):
         return _sqliteconstants.SQLITE_GENERAL_TYPE.ARRAY
@@ -105,18 +110,22 @@ def _convertSchemaOne(value: t.Union[t.Sequence, t.Mapping]
         else:
             return _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT
 
-def convertSchema(schema: t.Mapping[
-    t.Text, t.Union[t.Sequence, t.Mapping]]
-) -> t.Dict[t.Text, general_sqlite_types]:
+def convertSchema(schema: TDXSchema) -> GeneralSchema:
     """Converts a tdx schema into a sqlite schema.
     """
     return {name: _convertSchemaOne(value) for name, value in schema.items()}
 
+def convertRowToSqlite(
+    schema: GeneralSchema,
+    row: t.Mapping[t.Text, t.Any]
+) -> t.Mapping[t.Text, SQLVal]:
+    return {c: convertToSqlite(schema[c], v, True) for c, v in row.items()}
+
 def convertToSqlite(
-    type: general_sqlite_types_or_str,
+    type: GeneralSQLOrStr,
     value: t.Any,
     only_stringify: bool = False
-) -> sqlite_types:
+) -> SQLVal:
     """Converts a tdx value to a sqlite value based on a sqlite type.
 
     Args:
@@ -133,7 +142,7 @@ def convertToSqlite(
     Returns:
         The converted value.
     """
-    fixed_type = _toGeneralSqliteType(type)
+    fixed_type = _toGeneralSqliteValType(type)
 
     if only_stringify:
         def to_text(value) -> t.Text:
@@ -146,7 +155,7 @@ def convertToSqlite(
     def jsonify(value) -> t.Text:
         return to_text(json.dumps(value))
 
-    converter: t.Dict[general_sqlite_types, t.Callable] = {
+    converter: t.Dict[GeneralSQLiteVal, t.Callable] = {
         SQLITE_TYPE.INTEGER: int,
         SQLITE_TYPE.REAL: float,
         SQLITE_TYPE.NUMERIC: float,
@@ -158,9 +167,9 @@ def convertToSqlite(
     return converter[fixed_type](value) # type: ignore
 
 def convertToTdx(
-    type: general_sqlite_types_or_str,
+    type: GeneralSQLOrStr,
     value: t.Text
-) -> json_types:
+) -> JSONified:
     """Converts a sqlite value to a tdx value based on a sqlite type.
 
     Args:
@@ -171,9 +180,9 @@ def convertToTdx(
         The converted value.
     """
 
-    fixed_type = _toGeneralSqliteType(type)
+    fixed_type = _toGeneralSqliteValType(type)
 
-    converter: t.Dict[general_sqlite_types, t.Callable] = {
+    converter: t.Dict[GeneralSQLiteVal, t.Callable] = {
         SQLITE_TYPE.INTEGER: int,
         SQLITE_TYPE.REAL: float,
         SQLITE_TYPE.NUMERIC: float,
