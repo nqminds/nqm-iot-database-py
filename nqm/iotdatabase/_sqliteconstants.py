@@ -35,6 +35,10 @@ class SQLITE_SORT_TYPE(ConstEnum):
     ASC = "ASC"
     DESC = "DESC"
 
+class TDX_SORT_TYPE(ConstEnum):
+    ASC = "asc"
+    DESC = "desc"
+
 class TDX(ConstEnum):
     TYPE = TDX_TYPE
 

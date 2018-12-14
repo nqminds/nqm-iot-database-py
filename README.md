@@ -24,3 +24,8 @@ pipenv run coverage run --source=nqm -m pytest && pipenv run coverage report
 ```bash
 pipenv run mypy -m nqm.iotdatabase._sqliteschemaconverter && echo -e "\e[1;32mPass! \e[0m"
 ```
+
+## Changes to make in SQLAlchemy
+
+- Add sorting on Primary Keys (SQLite feature)
+- allow using SQLite URI connections

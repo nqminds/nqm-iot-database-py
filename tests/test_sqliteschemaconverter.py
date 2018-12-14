@@ -19,7 +19,7 @@ def _convertSchemaParams():
 
     def load_from_json():
         """Loads ConvertSchemaParam from a JSON file"""
-        jsonfilepath = "test_sqliteschemaconverter_convertSchemaParams.json"
+        jsonfilepath = "tdx-schemas.json"
         # request.node.fspath is the location of this test file
         contents = None
 

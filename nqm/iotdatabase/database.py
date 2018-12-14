@@ -4,10 +4,11 @@ import typing as t
 
 import pathlib
 import os
-import sqlite3
 import sqlalchemy
 import sqlalchemy.engine
 import sqlalchemy.dialects.postgresql
+
+import shortuuid
 
 import nqm.iotdatabase._sqliteconstants as _sqliteconstants
 import nqm.iotdatabase._sqliteutils as _sqliteutils
@@ -18,10 +19,18 @@ import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
 DbTypeEnum = _sqliteutils.DbTypeEnum
 AddDataResult = t.NewType("AddDataResult", dict)
 
+
 class Database(object):
     general_schema: schemaconverter.GeneralSchema
     sqlEngine: sqlalchemy.engine.Engine
     table: sqlalchemy.Table = None
+
+    def __init__(self,
+        path: t.Union[t.Text, os.PathLike],
+        type: t.Union[t.Text, DbTypeEnum],
+        mode: t.Union[t.Text, _sqliteutils.DbModeEnum]
+    ):
+        self.openDatabase(path, type, mode)
 
     @property
     def tdx_schema(self) -> schemaconverter.TDXSchema:
@@ -30,38 +39,86 @@ class Database(object):
             info_keys = _sqliteinfotable.getInfoKeys(
                 self.sqlEngine, ["schema"])
             if info_keys: # lists are False is empty
-                tdx_schema = info_keys["schema"]
+                tdx_schema = info_keys
                 # dataset schema definition
                 tdx_schema.setdefault("schema", dict())
                 # dataset data schema
-                tdx_schema["schema"].setdefault("dataSchema", dict())
+                tdx_schema.setdefault("dataSchema", dict())
         return tdx_schema
 
     def createDatabase(self,
-        basedOnSchema: t.Text = "dataset",
-        derived: t.Mapping = None,
-        description: t.Text = None,
-        id: t.Text = None,
-        name: t.Text = None,
-        meta: t.Mapping = None,
-        parentId: t.Text = None,
-        provenance: t.Text = None,
-        schema: schemaconverter.TDXSchema = None,
-        shareMode: t.Text = None,
-        tags: t.Iterable[t.Text] = None,
+        id: t.Text = shortuuid.uuid(),
+        schema: schemaconverter.TDXSchema = {},
         **kargs
-    ):
+    ) -> t.Text:
         """Creates a dataset in the SQLite Database
 
         Args:
-            basedOnSchema:
-                id of the schema on which this resource will be based.
+            id:
+                the requested ID of the new resource. Must be unique.
+                Will be auto-generated if omitted (recommended).
+                Will be replaced with the original one if the db already is
+                created.
+            schema:
+                schema definition. Should contain two fields:
+
+                * ``dataSchema``: A dict containing the TDX data schema.
+                
+                * ``uniqueIndex``:
+                    List of ``{"asc": column}`` or ``{"desc": column}``
+                    specifying the unique primary key index.
+            **kargs:
+                Other arguments to store in the info table.
+        Returns:
+            The id of the dataset.
         """
+        db = self.sqlEngine
+
+        schema.setdefault("dataSchema", {})
+        schema.setdefault("uniqueIndex", {})
+
+        if not schema["dataSchema"] and schema["uniqueIndex"]:
+            raise ValueError(("schema.dataSchema was empty, but"
+                    " schema.uniqueIndex has a non.empty value of {}"
+                ).format(schema.uniqueIndex))
+
+        # convert the TDX schema to an SQLite schema and save it
+        self.general_schema = schemaconverter.convertSchema(
+            schema["dataSchema"])
+
+        if _sqliteinfotable.checkInfoTable(db):
+            # check if old id exists
+            infovals = _sqliteinfotable.getInfoKeys(db, ["id"])
+            # use the original id if we can find it
+            id = infovals.get("id", id)
+
+            # will raise an error if the schemas aren't compatible
+            self.compatibleSchema(schema, raise_error=True)
+            return id
+
+        # create infotable
+        _sqliteinfotable.createInfoTable(db)
+        info = kargs
+        info["schema"] = schema
+        info["id"] = id
+        
+        _sqliteinfotable.setInfoKeys(db, info)
+        
+        sqlite_schema = schemaconverter.mapSchema(self.general_schema)
+
+        if not sqlite_schema:
+            # TODO Maybe add error (none now matches nqm-iot-database-utils)
+            return id
+
+        data_table = alchemyconverter.makeDataTable(
+            db, sqlite_schema, schema)
+        data_table.create()
+        return id
 
     def openDatabase(self,
-        path: t.Union([t.Text, os.PathLike]),
-        type: t.Union([t.Text, DbTypeEnum]),
-        mode: t.Union([t.Text, _sqliteutils.DbModeEnum])
+        path: t.Union[t.Text, os.PathLike],
+        type: t.Union[t.Text, DbTypeEnum],
+        mode: t.Union[t.Text, _sqliteutils.DbModeEnum]
     ):
         """ Opens an SQLite database.
 
@@ -83,19 +140,28 @@ class Database(object):
         tdx_schema = self.tdx_schema
         if tdx_schema:
             self.general_schema = schemaconverter.convertSchema(tdx_schema)
-
-        self.table = alchemyconverter.makeTable(
-            self.sqlEngine, self.general_schema, tdx_schema)
         
         self.connection = self.sqlEngine.connect()
         return self
 
-    def compatibleSchema(self, schema: schemaconverter.TDXSchema) -> bool:
+    # copy docstring
+    __init__.__doc__ = openDatabase.__doc__
+
+    def compatibleSchema(self,
+        schema: schemaconverter.TDXSchema,
+        raise_error: bool = True
+    ) -> bool:
         """Checks whether the given schema is a subset of the db schema
         """
         db_tdx_schema = self.tdx_schema
         # see https://stackoverflow.com/a/41579450/10149169
         is_subset = db_tdx_schema.items() <= schema.items()
+        if not is_subset and raise_error:
+            raise ValueError((
+                    "The given database schema is not compatible with the"
+                    " existing database schema. The given schema was {}"
+                    " but the existing schema was {}").format(
+                        schema, db_tdx_schema))
         return is_subset
 
     def addData(self,

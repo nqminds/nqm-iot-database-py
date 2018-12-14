@@ -31,9 +31,11 @@ JSONable = t.Union[
 JSONified = t.Union[int, float, t.List, t.Dict, t.Text, None]
 
 # general schema type
-GeneralSchema =  t.Dict[t.Text, GeneralSQLiteVal]
+GeneralSchema =  t.Mapping[t.Text, GeneralSQLiteVal]
+# tdx dataSchema type
+TDXDataSchema = t.Mapping[t.Text, JSONable]
 # tdx schema type
-TDXSchema = t.Mapping[t.Text, t.Union[t.Sequence, t.Mapping]]
+TDXSchema = t.Mapping[t.Text, JSONable]
 
 def getBasicType(tdx_types: t.Sequence[
     t.Union[TDX_TYPE, t.Text]
@@ -110,10 +112,10 @@ def _convertSchemaOne(value: t.Union[t.Sequence, t.Mapping]
         else:
             return _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT
 
-def convertSchema(schema: TDXSchema) -> GeneralSchema:
-    """Converts a tdx schema into a sqlite schema.
+def convertSchema(schema: TDXDataSchema) -> GeneralSchema:
+    """Converts a tdx data schema into a sqlite schema.
     """
-    return {name: _convertSchemaOne(value) for name, value in schema.items()}
+    return {name: _convertSchemaOne(val) for name, val in schema.items()}
 
 def convertRowToSqlite(
     schema: GeneralSchema,

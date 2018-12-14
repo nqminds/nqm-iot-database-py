@@ -39,7 +39,6 @@ key_parametrize = lambda: pytest.mark.parametrize(
     argvalues=itertools.chain(
         [{}, {"hi": "test"}],
         json_keys(),
-        [functools.reduce(lambda x, y: x.update(y) or x, json_keys(), dict())],
     )
 )
 
