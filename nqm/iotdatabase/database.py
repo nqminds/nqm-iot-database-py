@@ -110,9 +110,9 @@ class Database(object):
             # TODO Maybe add error (none now matches nqm-iot-database-utils)
             return id
 
-        data_table = alchemyconverter.makeDataTable(
+        self.table = alchemyconverter.makeDataTable(
             db, sqlite_schema, schema)
-        data_table.create()
+        self.table.create()
         return id
 
     def openDatabase(self,
@@ -174,10 +174,11 @@ class Database(object):
         convertRow = schemaconverter.convertRowToSqlite
         sqlData = [convertRow(general_schema, row) for row in data]
 
-        uniqueIndex = self.tdx_schema.uniqueIndex
+        if self.table is None:
+            raise ValueError("self.table has not been initialized yet")
 
         self.connection.execute(
-            sqlalchemy.dialects.postgresql.insert(self.table),
+            self.table.insert(),
             sqlData)
 
         return t.cast(AddDataResult, {"count": len(sqlData)})
