@@ -74,8 +74,7 @@ class Database(object):
         """
         db = self.sqlEngine
 
-        schema.setdefault("dataSchema", {})
-        schema.setdefault("uniqueIndex", {})
+        tdxSchema = dict(schema.items())
 
         if not schema["dataSchema"] and schema["uniqueIndex"]:
             raise ValueError(("schema.dataSchema was empty, but"

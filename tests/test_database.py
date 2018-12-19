@@ -54,7 +54,8 @@ def make_val(gen_type, number):
         raise NotImplementedError(f"Huh, {typ} did not match anything...")
 
 def make_data(schema, number=100):
-    gen_schema = _sqliteschemaconverter.convertSchema(schema["dataSchema"])
+    gen_schema = _sqliteschemaconverter.convertSchema(
+        schema.get("dataSchema", {}))
 
     def make_row(row_no):
         return {key: make_val(typ, row_no) for key, typ in gen_schema.items()}
@@ -75,9 +76,10 @@ def db(inmemdb, schema):
 def test_insert_dataset(db, schema):
     number = 100
     data = make_data(schema, number)
-    if schema["dataSchema"]:
+    if schema.get("dataSchema", []):
         assert db.addData(data) == {"count": number}
     else:
+        # no table should be created
         with pytest.raises(ValueError):
             db.addData(data)
 
