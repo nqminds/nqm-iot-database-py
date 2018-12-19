@@ -15,14 +15,24 @@ sqlalchemyMap: t.Mapping[
     _sqliteconstants.SQLITE_TYPE.REAL: sqlalchemy.types.REAL,
     _sqliteconstants.SQLITE_TYPE.INTEGER: sqlalchemy.types.Integer
 }
+
+# A dict of {"asc": col} or {"desc": col}
+SortCol = t.Mapping[t.Text, t.Text]
+
 def convertToSqlAlchemy(
     sqlite_type: _sqliteconstants.SQLITE_TYPE
 ): return sqlalchemyMap[sqlite_type]
 
 def makeIndexArg(
-    schema_column: t.Mapping[t.Text, t.Text],
+    schema_column: SortCol,
     columns: t.Mapping[t.Text, sqlalchemy.sql.expression.ColumnElement]
 ):
+    """Return an arg that can be used for creating indexes
+
+    Args:
+        schema_column: A dict of {"asc": col} or {"desc": col}
+        columns: A dict of {col: sqlalchemy columns}
+    """
     if len(schema_column) != 1:
         raise ValueError(("[sqlite-alchemy-converter] schema_column has {}"
             " values instead of the expected 1."
@@ -52,14 +62,17 @@ def makeIndexes(
     columns: t.Mapping[t.Text, sqlalchemy.sql.expression.ColumnElement],
     tdx_schema: schemaconverter.TDXSchema
 ):
-    primary_index = tdx_schema["uniqueIndex"]
+    primary_index = t.cast(
+        t.Sequence[SortCol], tdx_schema["uniqueIndex"])
     p_args = [makeIndexArg(x, columns) for x in primary_index]
     if p_args: # make primary key constraint if it exists
         table.append_constraint(sqlalchemy.PrimaryKeyConstraint(
             *p_args, name=str(_sqliteconstants.DATABASE_TABLE_INDEX_NAME)
         ))
     
-    non_unique_indexes = tdx_schema.get("nonUniqueIndexes", [])
+    non_unique_indexes = t.cast(
+        t.Sequence[t.Sequence[SortCol]],
+        tdx_schema.get("nonUniqueIndexes", []))
     for index in non_unique_indexes:
         i_args = [makeIndexArg(x, columns) for x in index]
         table.append_constraint(sqlalchemy.schema.Index(

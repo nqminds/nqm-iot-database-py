@@ -9,16 +9,17 @@ import sqlalchemy
 import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 import mongosql
-from nqm.iotdatabase._sqliteschemaconverter import convertToSqlite, convertToTdx
+import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
 import nqm.iotdatabase._sqliteconstants as _sqliteconstants
 
 DATABASE_INFO_TABLE_NAME = _sqliteconstants.DATABASE_INFO_TABLE_NAME
 SQLITE_TXT = _sqliteconstants.SQLITE_TYPE.TEXT
 SQLITE_OBJ = _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT
 
-Base = sqlalchemy.ext.declarative.declarative_base(cls=(mongosql.MongoSqlBase,))
+Base = sqlalchemy.ext.declarative.declarative_base(
+    cls=(mongosql.MongoSqlBase,))
 
-class Info(Base):
+class Info(Base): # type: ignore
     __tablename__ = DATABASE_INFO_TABLE_NAME
     # need to set quote=True else key might be converted to KEY
     key = sqlalchemy.Column(sqlalchemy.String, name="key",
@@ -37,12 +38,12 @@ def checkInfoTable(db: sqlalchemy.engine.Engine) -> bool:
     Args:
         db: The sqlite3 db Engine from sqlalchemy
     """
-    return info_table.exists(db)
+    return info_table.exists(db) # type: ignore
 
 def getInfoKeys(
     db: sqlalchemy.engine.Engine,
     keys: typing.Iterable[typing.Text]
-) -> typing.Dict[typing.Text, typing.Text]:
+) -> typing.Dict[typing.Text, schemaconverter.JSONified]:
     """Gets some rows from the info table.
 
     Args:
@@ -56,16 +57,17 @@ def getInfoKeys(
         {"key": {"$in": list(keys)}}
     ).end()
     return {
-        key: convertToTdx(SQLITE_OBJ, val) for key, val in query.all()}
+        key: schemaconverter.convertToTdx(SQLITE_OBJ, str(val)) 
+        for key, val in query.all()}
 
 def setInfoKeys(
     db: sqlalchemy.engine.Engine,
     keys: typing.Mapping[typing.Text, typing.Text]
-) -> typing.Dict["count", int]:
+):
     rowcount = 0
     sqlite_keys = {
-        convertToSqlite(SQLITE_TXT, key, True):
-            convertToSqlite(SQLITE_OBJ, val, True)
+        schemaconverter.convertToSqlite(SQLITE_TXT, key, True):
+            schemaconverter.convertToSqlite(SQLITE_OBJ, val, True)
         for key, val in keys.items()
     }
     # if empty keys do nothing

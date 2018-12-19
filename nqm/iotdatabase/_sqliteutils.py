@@ -43,7 +43,7 @@ def sqliteURI(
     return urllib.parse.urlunparse(urllib.parse.ParseResult(
         scheme="file",
         netloc="",
-        path=urllib.parse.quote(path),
+        path=urllib.parse.quote(str(path)),
         params="",
         query=urllib.parse.urlencode({
             # set mode to memory in type is memory, else use the types
@@ -89,16 +89,16 @@ def escapeIdentifier(identifier: typing.Text) -> typing.Text:
     # escapes all " with "" and adds " at the beginning/end
     return '"{}"'.format(identifier.replace('"', '""'))
 
-def _escapeChar(char: typing.Text) -> typing.Text:
+def _escapeChar(match) -> typing.Text:
     """Escapes a character using HTML standard.
 
     Args:
-        char: The string contain the char to be escaped.
+        char: The regex match containing the char to be escaped.
 
     Returns:
         The escaped char, ie "%4A" for "J"
     """
-    return "%{:X}".format(ord(char))
+    return "%{:X}".format(ord(match.get(0)))
 
 parameter_regex = re.compile(r"[\%\x09\x0a\x0c\x0d\x20\)]")
 def makeNamedParameter(named_parameter: typing.Text) -> typing.Text:

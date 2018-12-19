@@ -33,7 +33,7 @@ JSONified = t.Union[int, float, t.List, t.Dict, t.Text, None]
 # general schema type
 GeneralSchema =  t.Mapping[t.Text, GeneralSQLiteVal]
 # tdx dataSchema type
-TDXDataSchema = t.Mapping[t.Text, JSONable]
+TDXDataSchema = t.Mapping[t.Text, t.Union[t.Mapping, t.Sequence]]
 # tdx schema type
 TDXSchema = t.Mapping[t.Text, JSONable]
 

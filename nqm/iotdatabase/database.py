@@ -19,11 +19,12 @@ import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
 DbTypeEnum = _sqliteutils.DbTypeEnum
 AddDataResult = t.NewType("AddDataResult", dict)
 
-
 class Database(object):
     general_schema: schemaconverter.GeneralSchema
     sqlEngine: sqlalchemy.engine.Engine
     table: sqlalchemy.Table = None
+    tdx_schema: schemaconverter.TDXSchema = dict()
+    tdx_data_schema: schemaconverter.TDXDataSchema = dict()
 
     def __init__(self,
         path: t.Union[t.Text, os.PathLike],
@@ -32,9 +33,8 @@ class Database(object):
     ):
         self.openDatabase(path, type, mode)
 
-    @property
-    def tdx_schema(self) -> schemaconverter.TDXSchema:
-        tdx_schema: schemaconverter.TDXSchema = dict()
+    def load_tdx_schema(self):
+        tdx_schema: t.Dict[t.Text, schemaconverter.JSONable] = dict()
         if _sqliteinfotable.checkInfoTable(self.sqlEngine):
             info_keys = _sqliteinfotable.getInfoKeys(
                 self.sqlEngine, ["schema"])
@@ -44,7 +44,9 @@ class Database(object):
                 tdx_schema = info_keys["schema"]
                 # dataset data schema
                 tdx_schema.setdefault("dataSchema", dict())
-        return tdx_schema
+        self.tdx_schema = tdx_schema
+        self.tdx_data_schema = t.cast(
+            schemaconverter.TDXDataSchema, tdx_schema["dataSchema"])
 
     def createDatabase(self,
         id: t.Text = shortuuid.uuid(),
@@ -76,31 +78,36 @@ class Database(object):
 
         tdxSchema = dict(schema.items())
 
-        if not schema["dataSchema"] and schema["uniqueIndex"]:
+        tdxSchema.setdefault("dataSchema", {})
+        tdxSchema.setdefault("uniqueIndex", {})
+
+        if not tdxSchema["dataSchema"] and tdxSchema["uniqueIndex"]:
             raise ValueError(("schema.dataSchema was empty, but"
                     " schema.uniqueIndex has a non.empty value of {}"
-                ).format(schema.uniqueIndex))
+                ).format(tdxSchema["uniqueIndex"]))
 
         # convert the TDX schema to an SQLite schema and save it
         self.general_schema = schemaconverter.convertSchema(
-            schema["dataSchema"])
+            t.cast(schemaconverter.TDXDataSchema, tdxSchema["dataSchema"]))
 
         if _sqliteinfotable.checkInfoTable(db):
             # check if old id exists
             infovals = _sqliteinfotable.getInfoKeys(db, ["id"])
             # use the original id if we can find it
-            id = infovals.get("id", id)
+            id = str(infovals.get("id", id))
 
             # will raise an error if the schemas aren't compatible
-            self.compatibleSchema(schema, raise_error=True)
+            self.compatibleSchema(tdxSchema, raise_error=True)
         else:
             # create infotable
             _sqliteinfotable.createInfoTable(db)
             info = kargs
-            info["schema"] = schema
+            info["schema"] = tdxSchema
             info["id"] = id
             
             _sqliteinfotable.setInfoKeys(db, info)
+
+        self.load_tdx_schema()
 
         sqlite_schema = schemaconverter.mapSchema(self.general_schema)
 
@@ -109,7 +116,7 @@ class Database(object):
             return id
 
         self.table = alchemyconverter.makeDataTable(
-            db, sqlite_schema, schema)
+            db, sqlite_schema, tdxSchema)
         self.table.create(checkfirst=True) # create unless already exists
         return id
 
@@ -136,11 +143,6 @@ class Database(object):
         uri = _sqliteutils.sqlAlchemyURL(pathlib.Path(path), typeEnum, mode)
         # creates the sqlite3 connection
         self.sqlEngine = sqlalchemy.create_engine(uri)
-        
-        self.general_schema = dict()
-        tdx_schema = self.tdx_schema
-        if tdx_schema:
-            self.general_schema = schemaconverter.convertSchema(tdx_schema)
         
         self.connection = self.sqlEngine.connect().execution_options(
             autocommit=True)
@@ -169,6 +171,20 @@ class Database(object):
     def addData(self,
         data: t.Iterable[t.Mapping[t.Text, t.Any]]
     ) -> AddDataResult:
+        """Add data to a database resource.
+
+        Example:
+            >>> db = Database("", "memory", "w+");
+            >>> db.createDatabase(schema={"dataSchema": {"a": []}})
+            >>> db.addData([{"a": 1}, {"a": 2}])
+            {"count": 2}
+
+        Args:
+            data: A list of rows, where each row is a mapping of key: val
+
+        Returns:
+            The count of data inserted.
+        """
         # self.* lookup is slow so do it once only
         general_schema = self.general_schema
         

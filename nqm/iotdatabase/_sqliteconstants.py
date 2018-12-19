@@ -53,8 +53,8 @@ class SqliteConstants(ConstEnum):
     DATABASE_INFO_TABLE_NAME = "info"
     DATABASE_DATA_TABLE_NAME = "data"
     DATABASE_TABLE_INDEX_NAME = "dataindex"
-    TDX = TDX
-    SQLITE = SQLITE
 
 # exports all the enum members to the module namespace
-globals().update(SqliteConstants.__members__)
+DATABASE_INFO_TABLE_NAME = SqliteConstants.DATABASE_INFO_TABLE_NAME
+DATABASE_DATA_TABLE_NAME = SqliteConstants.DATABASE_DATA_TABLE_NAME
+DATABASE_TABLE_INDEX_NAME = SqliteConstants.DATABASE_TABLE_INDEX_NAME
