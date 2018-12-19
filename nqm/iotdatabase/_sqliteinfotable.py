@@ -53,9 +53,10 @@ def getInfoKeys(
     """
     session = sqlalchemy.orm.session.Session(db)
     query = Info.mongoquery(session.query(Info.key, Info.value)).filter(
-        {"keys": {"$in": keys}}
+        {"key": {"$in": list(keys)}}
     ).end()
-    return {key: value for key, value in query.all()}
+    return {
+        key: convertToTdx(SQLITE_OBJ, val) for key, val in query.all()}
 
 def setInfoKeys(
     db: sqlalchemy.engine.Engine,
@@ -63,7 +64,8 @@ def setInfoKeys(
 ) -> typing.Dict["count", int]:
     rowcount = 0
     sqlite_keys = {
-        convertToSqlite(SQLITE_TXT, key): convertToSqlite(SQLITE_OBJ, val)
+        convertToSqlite(SQLITE_TXT, key, True):
+            convertToSqlite(SQLITE_OBJ, val, True)
         for key, val in keys.items()
     }
     # if empty keys do nothing

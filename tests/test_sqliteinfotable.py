@@ -43,9 +43,7 @@ key_parametrize = lambda: pytest.mark.parametrize(
 )
 
 @key_parametrize()
-def test_setInfoKeys(blank_table, keys):
-    assert infotable.setInfoKeys(blank_table, keys) == {"count": len(keys)}
-
-@key_parametrize()
 def test_getInfoKeys(blank_table, keys):
-    pass
+    assert infotable.setInfoKeys(blank_table, keys) == {"count": len(keys)}
+    keyList = keys.keys()
+    assert infotable.getInfoKeys(blank_table, keyList) == keys

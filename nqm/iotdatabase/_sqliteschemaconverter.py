@@ -119,9 +119,23 @@ def convertSchema(schema: TDXDataSchema) -> GeneralSchema:
 
 def convertRowToSqlite(
     schema: GeneralSchema,
-    row: t.Mapping[t.Text, t.Any]
+    row: t.Mapping[t.Text, t.Any],
+    throwOnExtraKeys: bool = False,
 ) -> t.Mapping[t.Text, SQLVal]:
-    return {c: convertToSqlite(schema[c], v, True) for c, v in row.items()}
+    converted_row = {}
+    sqlite_type = None
+    for c, v in row.items():
+        try:
+            sqlite_type = schema[c]
+        except KeyError:
+            if not throwOnExtraKeys:
+                continue
+            else:
+                raise KeyError(
+                    f"Key {c} could not be found within the schema keys:"
+                    f" {schema.keys()}")
+        converted_row[c] = convertToSqlite(sqlite_type, v, True)
+    return converted_row
 
 def convertToSqlite(
     type: GeneralSQLOrStr,
