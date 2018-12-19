@@ -39,9 +39,9 @@ class Database(object):
             info_keys = _sqliteinfotable.getInfoKeys(
                 self.sqlEngine, ["schema"])
             if info_keys: # lists are False is empty
-                tdx_schema = info_keys
+                info_keys.setdefault("schema", dict())
                 # dataset schema definition
-                tdx_schema.setdefault("schema", dict())
+                tdx_schema = info_keys["schema"]
                 # dataset data schema
                 tdx_schema.setdefault("dataSchema", dict())
         return tdx_schema
@@ -94,16 +94,15 @@ class Database(object):
 
             # will raise an error if the schemas aren't compatible
             self.compatibleSchema(schema, raise_error=True)
-            return id
+        else:
+            # create infotable
+            _sqliteinfotable.createInfoTable(db)
+            info = kargs
+            info["schema"] = schema
+            info["id"] = id
+            
+            _sqliteinfotable.setInfoKeys(db, info)
 
-        # create infotable
-        _sqliteinfotable.createInfoTable(db)
-        info = kargs
-        info["schema"] = schema
-        info["id"] = id
-        
-        _sqliteinfotable.setInfoKeys(db, info)
-        
         sqlite_schema = schemaconverter.mapSchema(self.general_schema)
 
         if not sqlite_schema:
@@ -112,7 +111,7 @@ class Database(object):
 
         self.table = alchemyconverter.makeDataTable(
             db, sqlite_schema, schema)
-        self.table.create()
+        self.table.create(checkfirst=True) # create unless already exists
         return id
 
     def openDatabase(self,
