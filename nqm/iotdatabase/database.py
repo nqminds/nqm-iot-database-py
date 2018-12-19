@@ -129,8 +129,11 @@ class Database(object):
         """
         typeEnum = DbTypeEnum(type)
         if typeEnum == DbTypeEnum.file:
-            # makes the directory the sqlite db is in
-            os.makedirs(os.path.dirname(path))
+            try:
+                # makes the directory the sqlite db is in
+                os.makedirs(os.path.dirname(path))
+            except FileExistsError:
+                pass
 
         uri = _sqliteutils.sqlAlchemyURL(pathlib.Path(path), typeEnum, mode)
         # creates the sqlite3 connection
@@ -141,7 +144,8 @@ class Database(object):
         if tdx_schema:
             self.general_schema = schemaconverter.convertSchema(tdx_schema)
         
-        self.connection = self.sqlEngine.connect()
+        self.connection = self.sqlEngine.connect().execution_options(
+            autocommit=True)
         return self
 
     # copy docstring
@@ -177,8 +181,6 @@ class Database(object):
         if self.table is None:
             raise ValueError("self.table has not been initialized yet")
 
-        self.connection.execute(
-            self.table.insert(),
-            sqlData)
+        self.connection.execute(self.table.insert(), sqlData)
 
         return t.cast(AddDataResult, {"count": len(sqlData)})
