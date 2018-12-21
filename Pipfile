@@ -12,6 +12,10 @@ shortuuid = "*"
 pytest = "*"
 mypy = "*"
 coverage = "*"
+sphinxcontrib-napoleon = "*"
+sphinx = "*"
+sphinx-autodoc-typehints = "*"
+recommonmark = "*"
 
 [requires]
 python_version = "3.6"

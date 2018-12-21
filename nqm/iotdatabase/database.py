@@ -1,4 +1,6 @@
-"""
+"""Module for controlling an NQM InterliNQ Database in Python
+
+See the class `Database` for more info.
 """
 import typing as t
 
@@ -17,13 +19,22 @@ import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
 import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
 
 DbTypeEnum = _sqliteutils.DbTypeEnum
+TDXSchema = schemaconverter.TDXSchema
 AddDataResult = t.NewType("AddDataResult", dict)
 
 class Database(object):
+    """An instance of an NQM InterliNQ Database.
+
+    Uses SQLite as a backend, but allows for TDX-style commands.
+
+    Attributes:
+        sqlEngine: The `sqlalchemy` engine used for this connection.
+        tdx_schema: The `TDXSchema` used by this dataset.
+    """
     general_schema: schemaconverter.GeneralSchema
     sqlEngine: sqlalchemy.engine.Engine
     table: sqlalchemy.Table = None
-    tdx_schema: schemaconverter.TDXSchema = dict()
+    tdx_schema: schemaconverter.TDXSchema = TDXSchema(dict())
     tdx_data_schema: schemaconverter.TDXDataSchema = dict()
 
     def __init__(self,
@@ -31,10 +42,21 @@ class Database(object):
         type: t.Union[t.Text, DbTypeEnum],
         mode: t.Union[t.Text, _sqliteutils.DbModeEnum]
     ):
+        """Opens an SQLite database using `openDatabase()`.
+
+        Args:
+            path: The path of the db.
+            type: The type of the db: `"file"` or `"memory"`
+            mode: The open mode of the db: `"w+"`, `"rw"`, or `"r"`
+        """
         self.openDatabase(path, type, mode)
 
-    def load_tdx_schema(self):
-        tdx_schema: t.Dict[t.Text, schemaconverter.JSONable] = dict()
+    def _load_tdx_schema(self):
+        """Loads the TDX Schema from the info table and stores.
+
+        Updates ``self.tdx_schema`` and ``self.tdx_data_schema``.
+        """
+        tdx_schema: TDXSchema = TDXSchema(dict())
         if _sqliteinfotable.checkInfoTable(self.sqlEngine):
             info_keys = _sqliteinfotable.getInfoKeys(
                 self.sqlEngine, ["schema"])
@@ -49,8 +71,8 @@ class Database(object):
             schemaconverter.TDXDataSchema, tdx_schema["dataSchema"])
 
     def createDatabase(self,
-        id: t.Text = shortuuid.uuid(),
-        schema: schemaconverter.TDXSchema = {},
+        id: t.Text = None,
+        schema: schemaconverter.TDXSchema = TDXSchema({}),
         **kargs
     ) -> t.Text:
         """Creates a dataset in the SQLite Database
@@ -74,12 +96,15 @@ class Database(object):
         Returns:
             The id of the dataset.
         """
+        id = shortuuid.uuid() if id is None else id
         db = self.sqlEngine
 
-        tdxSchema = dict(schema.items())
+        copiedTDXSchema = dict(schema.items())
 
-        tdxSchema.setdefault("dataSchema", {})
-        tdxSchema.setdefault("uniqueIndex", {})
+        copiedTDXSchema.setdefault("dataSchema", {})
+        copiedTDXSchema.setdefault("uniqueIndex", {})
+
+        tdxSchema = TDXSchema(copiedTDXSchema)
 
         if not tdxSchema["dataSchema"] and tdxSchema["uniqueIndex"]:
             raise ValueError(("schema.dataSchema was empty, but"
@@ -97,7 +122,7 @@ class Database(object):
             id = str(infovals.get("id", id))
 
             # will raise an error if the schemas aren't compatible
-            self.compatibleSchema(tdxSchema, raise_error=True)
+            self.compatibleSchema(TDXSchema(tdxSchema), raise_error=True)
         else:
             # create infotable
             _sqliteinfotable.createInfoTable(db)
@@ -107,7 +132,7 @@ class Database(object):
             
             _sqliteinfotable.setInfoKeys(db, info)
 
-        self.load_tdx_schema()
+        self._load_tdx_schema()
 
         sqlite_schema = schemaconverter.mapSchema(self.general_schema)
 
@@ -148,14 +173,23 @@ class Database(object):
             autocommit=True)
         return self
 
-    # copy docstring
-    __init__.__doc__ = openDatabase.__doc__
-
     def compatibleSchema(self,
         schema: schemaconverter.TDXSchema,
         raise_error: bool = True
     ) -> bool:
-        """Checks whether the given schema is a subset of the db schema
+        """Checks whether the given schema is a subset of the db schema.
+
+        Args:
+            schema: The TDX Schema.
+            raise_error: If
+
+                * ``True``: raise errors if anything goes wrong
+                * ``False``: Catch errors and return ``False`` if anything goes
+                    wrong
+
+        Raises:
+            ValueError: If the schemas are not compatible and `raise_error` is
+                `True`.
         """
         db_tdx_schema = self.tdx_schema
         # see https://stackoverflow.com/a/41579450/10149169
@@ -174,13 +208,14 @@ class Database(object):
         """Add data to a database resource.
 
         Example:
+            >>> from nqm.iotdatabase.database import Database
             >>> db = Database("", "memory", "w+");
-            >>> db.createDatabase(schema={"dataSchema": {"a": []}})
-            >>> db.addData([{"a": 1}, {"a": 2}])
-            {"count": 2}
+            >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
+            >>> db.addData([{"a": 1}, {"a": 2}]) == {"count": 2}
+            True
 
         Args:
-            data: A list of rows, where each row is a mapping of key: val
+            data: A list of rows, where each row is a mapping of ``{key: val}``
 
         Returns:
             The count of data inserted.
