@@ -18,7 +18,7 @@ def json_dbinfo(jsonfilepath="tdx-schemas.json"):
 def schemas():
     return itertools.chain(
         [x["schema"] for x in json_dbinfo()],
-        [{}]
+        [{}] # empty schema
     )
 
 @pytest.fixture(params=schemas())
@@ -26,15 +26,19 @@ def schema(request):
     return request.param
 
 def unique_schemas():
+    """ Returns a list of schemas that have a uniqueIndex """
     return [x for x in schemas() if x.get("uniqueIndex", [])]
 
 @pytest.fixture(params=unique_schemas())
 def unique_schema(request):
+    """Runs unique_schema test once for each schema with a uniqueIndex."""
     return request.param
 
 GENERAL_TYPES = _sqliteconstants.SQLITE_GENERAL_TYPE
 SQL_TYPES = _sqliteconstants.SQLITE_TYPE
 def make_val(gen_type, number):
+    """Generate a unique value of a specific type"""
+
     typ = _sqliteschemaconverter._toGeneralSqliteValType(gen_type)
     if typ is GENERAL_TYPES.OBJECT:
         return {
@@ -54,6 +58,7 @@ def make_val(gen_type, number):
         raise NotImplementedError(f"Huh, {typ} did not match anything...")
 
 def make_data(schema, number=100):
+    """Makes some unique rows of data to put into a dataset."""
     gen_schema = _sqliteschemaconverter.convertSchema(
         schema.get("dataSchema", {}))
 
@@ -65,10 +70,12 @@ def make_data(schema, number=100):
 
 @pytest.fixture()
 def inmemdb():
+    """Returns a new in-memory db"""
     return Database("", "memory", "w+")
 
 @pytest.fixture()
 def db(inmemdb, schema):
+    """When used as a fixture, creates a db with every schema in schema()"""
     inmemdb.createDatabase(schema=schema)
     return inmemdb
 
@@ -90,6 +97,7 @@ def test_insert_nonunique_error(inmemdb, unique_schema):
     data = make_data(unique_schema, number)
     assert inmemdb.addData(data) == {"count": number}
     repeatNum = random.randint(0, number)
+    # TODO: Maybe make our own Error type if something goes wrong?
     with pytest.raises(sqlalchemy.exc.IntegrityError):
         inmemdb.addData([data[repeatNum]])
 
@@ -97,6 +105,7 @@ def make_filedb(filepath):
     return Database(filepath, "file", "w+")
 
 def test_file_db(tmpdir):
+    """Make sures that a file db actually saves and loads data correctly"""
     filedb = make_filedb(os.path.join(tmpdir, "testdb.sqlite"))
     schema = next(schemas())
     filedb.createDatabase(schema=schema)

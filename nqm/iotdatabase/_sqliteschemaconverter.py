@@ -47,12 +47,15 @@ def getBasicType(tdx_types: t.Sequence[
     Returns:
         The SQLite basic type.
     """
-    tdx_base_type = tdx_types[0]
+    tdx_base_type = tdx_types[0] # TDX Base Type is basically just JS types
     if isinstance(tdx_base_type, str):
         tdx_base_type = tdx_base_type.lower() # make sure we are using lowercase
-    tdx_base_type = TDX_TYPE(tdx_base_type)
+    tdx_base_type = TDX_TYPE(tdx_base_type) # convert to enum
 
     def number():
+        """If the base type is number, we need to use the derived type to
+        find out whether it is a INT/REAL.
+        """
         tdx_derived_type = tdx_types[1].upper() if len(tdx_types) > 1 else None
         if tdx_derived_type is None:
             pass
@@ -63,6 +66,7 @@ def getBasicType(tdx_types: t.Sequence[
 
         return SQLITE_TYPE.NUMERIC
 
+    # map of base types to functions that return the sqlite type
     mapping: t.Dict[TDX_TYPE, t.Callable[[], SQLITE_TYPE]] = {
         TDX_TYPE.STRING: lambda: SQLITE_TYPE.TEXT,
         TDX_TYPE.BOOLEAN: lambda: SQLITE_TYPE.NUMERIC,
@@ -70,11 +74,15 @@ def getBasicType(tdx_types: t.Sequence[
         TDX_TYPE.NUMBER: number
     }
 
+    # if the tdx type is not in mapping (ie array/obj), use TEXT by default
     return mapping.get(tdx_base_type, lambda: SQLITE_TYPE.TEXT)()
 
 def _toGeneralSqliteValType(general_sqlite_type: GeneralSQLOrStr
 ) -> GeneralSQLiteVal:
-    """Converts a string to the enum types"""
+    """Converts a string to the enum types.
+
+    Enums are better than strings since types and error messages.
+    """
     try:
         return SQLITE_TYPE(general_sqlite_type)
     except ValueError:
@@ -103,6 +111,8 @@ def mapSchema(types: t.Mapping[t.Text, GeneralSQLOrStr]
 def _convertSchemaOne(value: t.Union[t.Sequence, t.Mapping]
 ) -> GeneralSQLiteVal:
     """Used in convertSchema"""
+    # I don't actually understand what this does, I just ported
+    # it from @mereacre's code (🇲🇩 🧛 🔮 Moldovan Vampyre Magick)
     if isinstance(value, collections.Sequence):
         return _sqliteconstants.SQLITE_GENERAL_TYPE.ARRAY
     elif isinstance(value, collections.Mapping):
@@ -122,19 +132,24 @@ def convertRowToSqlite(
     row: t.Mapping[t.Text, t.Any],
     throwOnExtraKeys: bool = False,
 ) -> t.Mapping[t.Text, SQLVal]:
+    """Converts a row of TDX/Python data to SQLite using a GeneralSchema.
+    """
     converted_row = {}
     sqlite_type = None
-    for c, v in row.items():
+    for col, val in row.items():
         try:
-            sqlite_type = schema[c]
+            # in the Javascript API, if you try to insert {"color": 1}
+            # but the schema has {"colour": 1}, you will get NO ERROR.
+            # TODO: Add warning here.
+            sqlite_type = schema[col]
         except KeyError:
             if not throwOnExtraKeys:
                 continue
             else:
                 raise KeyError(
-                    f"Key {c} could not be found within the schema keys:"
+                    f"Key {col} could not be found within the schema keys:"
                     f" {schema.keys()}")
-        converted_row[c] = convertToSqlite(sqlite_type, v, True)
+        converted_row[col] = convertToSqlite(sqlite_type, val, True)
     return converted_row
 
 def convertToSqlite(
@@ -171,6 +186,7 @@ def convertToSqlite(
     def jsonify(value) -> t.Text:
         return to_text(json.dumps(value))
 
+    # map of types to funcs that covert from that type
     converter: t.Dict[GeneralSQLiteVal, t.Callable] = {
         SQLITE_TYPE.INTEGER: int,
         SQLITE_TYPE.REAL: float,
@@ -198,11 +214,12 @@ def convertToTdx(
 
     fixed_type = _toGeneralSqliteValType(type)
 
+    # map of types to funcs that covert from that type
     converter: t.Dict[GeneralSQLiteVal, t.Callable] = {
         SQLITE_TYPE.INTEGER: int,
         SQLITE_TYPE.REAL: float,
         SQLITE_TYPE.NUMERIC: float,
-        SQLITE_TYPE.TEXT: lambda x: x,
+        SQLITE_TYPE.TEXT: lambda x: x, # does nothing
         _sqliteconstants.SQLITE_GENERAL_TYPE.ARRAY: json.loads,
         _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT: json.loads
     }

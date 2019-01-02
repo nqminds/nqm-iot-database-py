@@ -30,6 +30,7 @@ class SQLITE_GENERAL_TYPE(ConstEnum):
     """
     OBJECT = "OBJECT"
     ARRAY = "ARRAY"
+    JSONMATRIX = "JSON_MATRIX"
 
 class SQLITE_SORT_TYPE(ConstEnum):
     ASC = "ASC"

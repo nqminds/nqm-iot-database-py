@@ -6,7 +6,7 @@ import sqlalchemy.engine
 import nqm.iotdatabase._sqliteconstants as _sqliteconstants
 import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
 
-sqlalchemyMap: t.Mapping[
+sqlalchemyMap: t.Dict[
     _sqliteconstants.SQLITE_TYPE, sqlalchemy.types.TypeEngine
 ] = {
     _sqliteconstants.SQLITE_TYPE.INTEGER: sqlalchemy.types.Integer,
@@ -15,9 +15,10 @@ sqlalchemyMap: t.Mapping[
     _sqliteconstants.SQLITE_TYPE.REAL: sqlalchemy.types.REAL,
     _sqliteconstants.SQLITE_TYPE.INTEGER: sqlalchemy.types.Integer
 }
+"""Map of SQLITE_TYPE to their corresponding sqlalchemy type"""
 
-# A dict of {"asc": col} or {"desc": col}
 SortCol = t.Mapping[t.Text, t.Text]
+"""A dict of {"asc": col} or {"desc": col}"""
 
 def convertToSqlAlchemy(
     sqlite_type: _sqliteconstants.SQLITE_TYPE
@@ -32,6 +33,9 @@ def makeIndexArg(
     Args:
         schema_column: A dict of {"asc": col} or {"desc": col}
         columns: A dict of {col: sqlalchemy columns}
+
+    Returns:
+        An arg that can be passed to sqlalchemy.PrimaryKeyConstraint
     """
     if len(schema_column) != 1:
         raise ValueError(("[sqlite-alchemy-converter] schema_column has {}"
@@ -49,12 +53,13 @@ def makeIndexArg(
 
     column = columns[column_name]
     sort_condition = None
+    # sorting is currently not supported by SQLAlchemy in primary keys
+    # TODO: Make pull request/fork in SQLAlchemy
     if sort_order is _sqliteconstants.TDX_SORT_TYPE.DESC:
         sort_condition = column.desc()
     elif sort_order is _sqliteconstants.TDX_SORT_TYPE.ASC:
         sort_condition = column.asc()
 
-    # sorting is currently not supported by SQLAlchemy in primary keys
     return column 
 
 def makeIndexes(
@@ -62,6 +67,13 @@ def makeIndexes(
     columns: t.Mapping[t.Text, sqlalchemy.sql.expression.ColumnElement],
     tdx_schema: schemaconverter.TDXSchema
 ):
+    """Makes the unique and non-unique indexes for a table.
+
+    Args:
+        table: The uncreated SQLAlchemy table to add the indexes to.
+        columns: A dict of {col: sqlalchemy columns}
+        tdx_schema: The TDX Schema containing the index specification.
+    """
     primary_index = t.cast(
         t.Sequence[SortCol], tdx_schema["uniqueIndex"])
     p_args = [makeIndexArg(x, columns) for x in primary_index]
@@ -84,6 +96,16 @@ def makeDataTable(
     sqliteSchema: t.Mapping[t.Text, _sqliteconstants.SQLITE_TYPE],
     tdxSchema: schemaconverter.TDXSchema
 ) -> sqlalchemy.Table:
+    """Makes an SQLAlchemy table for storing data based on a TDX Schema.
+
+    Args:
+        connection: The SQLAlchemy Engine that has the database information.
+        sqliteSchema: The SQLite Schema of {column_name: column_type}
+        tdxSchema: The TDX schema with the index specification.
+
+    Returns:
+        The uncreated SQLAlchemy table specification.
+    """
     metadata = sqlalchemy.MetaData(connection)
     Data = sqlalchemy.Table(
         _sqliteconstants.DATABASE_DATA_TABLE_NAME, metadata, quote=True)
