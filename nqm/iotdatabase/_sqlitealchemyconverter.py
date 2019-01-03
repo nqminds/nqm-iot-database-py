@@ -2,9 +2,17 @@ import typing as t
 import sqlalchemy
 import sqlalchemy.types
 import sqlalchemy.engine
+import sqlalchemy.event
 
 import nqm.iotdatabase._sqliteconstants as _sqliteconstants
 import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
+
+@sqlalchemy.event.listens_for(sqlalchemy.engine.Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    """Sets the DB to WAL mode to boost speed on all connections."""
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.close()
 
 sqlalchemyMap: t.Mapping[
     _sqliteconstants.SQLITE_TYPE, sqlalchemy.types.TypeEngine
