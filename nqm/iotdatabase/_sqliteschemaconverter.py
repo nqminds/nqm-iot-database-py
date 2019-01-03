@@ -2,9 +2,12 @@
 """
 import typing as t
 import numbers
-import nqm.iotdatabase._sqliteconstants as _sqliteconstants
 import json
 import collections
+import os
+
+import nqm.iotdatabase._sqliteconstants as _sqliteconstants
+import nqm.iotdatabase._ndarray as _ndarray
 
 SQLITE_TYPE = _sqliteconstants.SQLITE_TYPE
 TDX_TYPE = _sqliteconstants.TDX_TYPE
@@ -39,8 +42,8 @@ TDXSchema = t.NewType("TDXSchema", t.Mapping[t.Text, JSONable])
 
 def getBasicType(tdx_types: t.Sequence[
     t.Union[TDX_TYPE, t.Text]
-]) -> SQLITE_TYPE:
-    """Returns a basic SQLite type from a list of tdx types.
+]) -> GeneralSQLiteVal:
+    """Returns a general SQLite type from a list of tdx types.
 
     Args:
         tdx_types: The list of tdx types.
@@ -67,7 +70,8 @@ def getBasicType(tdx_types: t.Sequence[
         TDX_TYPE.STRING: lambda: SQLITE_TYPE.TEXT,
         TDX_TYPE.BOOLEAN: lambda: SQLITE_TYPE.NUMERIC,
         TDX_TYPE.DATE: lambda: SQLITE_TYPE.NUMERIC,
-        TDX_TYPE.NUMBER: number
+        TDX_TYPE.NUMBER: number,
+        TDX_TYPE.NDARRAY: lambda: _sqliteconstants.SQLITE_GENERAL_TYPE.NDARRAY,
     }
 
     return mapping.get(tdx_base_type, lambda: SQLITE_TYPE.TEXT)()
@@ -121,7 +125,22 @@ def convertRowToSqlite(
     schema: GeneralSchema,
     row: t.Mapping[t.Text, t.Any],
     throwOnExtraKeys: bool = False,
+    data_dir: t.Union[t.Text, os.PathLike] = "",
 ) -> t.Mapping[t.Text, SQLVal]:
+    """Converts a Python row to a row for SQLite insertion.
+
+    Args:
+        schema: The SQLite General Schema
+        row: A dict of column_name: column_value specifying the row
+        throwOnExtraKeys:
+            Set to `True` to throw an error if row has keys that are not
+            specified in the `schema`.
+        data_dir:
+            The directory to store additional data. Used when saving ndarrays.
+
+    Returns:
+        The converted row in SQLite types.
+    """
     converted_row = {}
     sqlite_type = None
     for c, v in row.items():
@@ -134,13 +153,14 @@ def convertRowToSqlite(
                 raise KeyError(
                     f"Key {c} could not be found within the schema keys:"
                     f" {schema.keys()}")
-        converted_row[c] = convertToSqlite(sqlite_type, v, True)
+        converted_row[c] = convertToSqlite(sqlite_type, v, True, data_dir)
     return converted_row
 
 def convertToSqlite(
     type: GeneralSQLOrStr,
     value: t.Any,
-    only_stringify: bool = False
+    only_stringify: bool = False,
+    data_dir: t.Union[t.Text, os.PathLike] = "",
 ) -> SQLVal:
     """Converts a tdx value to a sqlite value based on a sqlite type.
 
@@ -151,6 +171,8 @@ def convertToSqlite(
             delimiter addition.
             This shouldn't be required as one should bind strings to SQLite
             statements to avoid SQL injections anyway.
+        data_dir:
+            The directory to store additional data. Used when saving ndarrays.
 
     Raises:
         TypeError: If `value` is a Python type that cannot be converted t
@@ -171,13 +193,21 @@ def convertToSqlite(
     def jsonify(value) -> t.Text:
         return to_text(json.dumps(value))
 
+    def ndarray(array):
+        loc = os.path.join(
+                data_dir, str(_sqliteconstants.DATABASE.NDARR_FOLDER))
+        return _ndarray.saveNDArray(
+            array,
+            relative_loc = loc).tojson()
+
     converter: t.Dict[GeneralSQLiteVal, t.Callable] = {
         SQLITE_TYPE.INTEGER: int,
         SQLITE_TYPE.REAL: float,
         SQLITE_TYPE.NUMERIC: float,
         SQLITE_TYPE.TEXT: to_text,
         _sqliteconstants.SQLITE_GENERAL_TYPE.ARRAY: jsonify,
-        _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT: jsonify
+        _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT: jsonify,
+        _sqliteconstants.SQLITE_GENERAL_TYPE.NDARRAY: ndarray,
     }
 
     return converter[fixed_type](value) # type: ignore
@@ -204,7 +234,8 @@ def convertToTdx(
         SQLITE_TYPE.NUMERIC: float,
         SQLITE_TYPE.TEXT: lambda x: x,
         _sqliteconstants.SQLITE_GENERAL_TYPE.ARRAY: json.loads,
-        _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT: json.loads
+        _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT: json.loads,
+        _sqliteconstants.SQLITE_GENERAL_TYPE.NDARRAY: _ndarray.getNDArray,
     }
 
     return converter[fixed_type](value) # type: ignore

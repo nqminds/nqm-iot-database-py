@@ -3,6 +3,10 @@
 import typing as ty
 import numpy as np
 import os
+import tempfile
+import time
+import base64
+import json
 
 np_type_to_single_char: ty.Dict[ty.Text, np.dtype] = {
     v: c for c, v in np.sctypeDict.items() 
@@ -86,11 +90,29 @@ class NDArray(object):
         if not self.c: return_dict["c"] = self.c
         return return_dict
 
-def saveNDArray(array: np.ndarray, filepath, relative_loc):
-    path = os.path.join(relative_loc, filepath)
-    with open(path, "wb") as datafile:
+    def tojson(self) -> ty.Text:
+        return json.dumps(self.todict())
+
+def makePrefix():
+    unix_time_ms = int(time.time() * 1000)
+    unix_bytes = unix_time_ms.to_bytes(8, byteorder="big")
+    return base64.urlsafe_b64encode(unix_bytes).decode("ascii")
+
+def saveNDArray(array: np.ndarray, filepath = "", relative_loc = ""):
+    open_file = None
+    if filepath:
+        path = os.path.join(relative_loc, filepath)
+        open_file = open(path, "wb")
+    else: # make pseudo-random filename
+        open_file = tempfile.NamedTemporaryFile(
+            delete=False, # do not delete automatically
+            dir=relative_loc,
+            prefix=str(makePrefix()),
+            suffix=".dat")
+
+    with open_file as datafile:
         datafile.write(array.tobytes(None))
-    return NDArray.from_array(array, pointer=path, version="f")
+    return NDArray.from_array(array, pointer=open_file.name, version="f")
 
 supportedVersions = {"f"}
 """Stores the supported versions for loading a file"""
