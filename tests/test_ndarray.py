@@ -1,5 +1,5 @@
 import pytest
-import nqm.iotdatabase._matrix as _matrix
+import nqm.iotdatabase._ndarray as _ndarray
 import numpy as np
 
 types = ["int8", "int64", "uint32", "float", "double"]
@@ -22,6 +22,6 @@ def test_saving_loading(dtype, shape, c_order, tmp_path):
     else: a = np.asfortranarray(a, np.dtype(dtype))
 
     filepath = "./test"
-    metadata = _matrix.saveNDArray(a, filepath, tmp_path)
+    metadata = _ndarray.saveNDArray(a, filepath, tmp_path)
 
-    assert np.array_equal(a, _matrix.getNDArray(metadata, tmp_path))
+    assert np.array_equal(a, _ndarray.getNDArray(metadata, tmp_path))
