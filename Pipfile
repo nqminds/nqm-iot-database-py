@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+sqlalchemy = "*"
+mongosql = {git = "https://github.com/dignio/py-mongosql.git"}
+shortuuid = "*"
+
+[dev-packages]
+pytest = "*"
+mypy = "*"
+coverage = "*"
+sphinxcontrib-napoleon = "*"
+sphinx = "*"
+sphinx-autodoc-typehints = "*"
+recommonmark = "*"
+
+[requires]
+python_version = "3.6"

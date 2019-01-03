@@ -1,0 +1,39 @@
+[
+  {"baseType": "dataset"},
+  {"created": "2017-08-22T15:59:46.077Z"},
+  {"modified": "2017-09-12T10:26:33.667Z"},
+  {"tdxVersion": 1},
+  {"version": 10},
+  {},
+  {"store": "dataset.S1iAEk5uW"},
+  {"shareMode": "pr"},
+  {"description": "Test is a dataste"},
+  {"sortName": "test 2"},
+  {"name": "Test 2"},
+  {"createdBy": "mereacre@gmail.com/tdx.nq-m.com"},
+  {"owner": "mereacre@gmail.com/tdx.nq-m.com"},
+  {"id": "Byg9eBAYuW"},
+  {"derived": {}},
+  {"schemaDefinition": {}},
+  {"permissiveShare": "r"},
+  {"indexInfo": {
+    "complete": "100%",
+    "progress": "building primary key ",
+    "error": ""
+  }},
+  {"indexStatus": "built"},
+  {"system": false},
+  {"meta": {
+    "test1": "isOK",
+    "test2": 23
+  }},
+  {"importing": false},
+  {"tags": [
+    "test1",
+    "test2",
+    "test3"
+  ]},
+  {"parents": [
+    "ByZMnZ2KMx"
+  ]}
+]
