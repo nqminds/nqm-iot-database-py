@@ -24,7 +24,7 @@ def basictypestring(
     # only specify length if we have a variable width type
     l = str(length) if charBuiltinType in varlength_types else ""
     # only specify byte order if we need to
-    b = byteorder if byteorder != "=" or byteorder != "|" else ""
+    b = byteorder if byteorder != "=" and byteorder != "|" else ""
     return f"{b}{charBuiltinType}{l}"
 
 class NDArray(object):
