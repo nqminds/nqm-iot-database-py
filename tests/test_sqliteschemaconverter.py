@@ -7,22 +7,27 @@ import pathlib
 
 import nqm.iotdatabase._sqliteschemaconverter as sqliteschemaconverter
 
+# stores the params needed for a call of test_convertSchema()
 ConvertSchemaParam = collections.namedtuple(
     "ConvertSchemaParam",
     field_names="tdx,general,sqlite")
 
 def _convertSchemaParams():
+    """Returns an iterator containing the params for test_convertSchema()"""
+    # empty objects should convert to empty objects with no errors
+    # TODO: Maybe make a warning here?
     empty_test = ConvertSchemaParam(tdx={}, general={}, sqlite={})
     tests: typing.List[ConvertSchemaParam] = [ # list of ConvertSchemaParam
         empty_test
     ]
 
     def load_from_json():
-        """Loads ConvertSchemaParam from a JSON file"""
+        """Iterates over a file with the params for test_convertSchema()"""
         jsonfilepath = "tdx-schemas.json"
         # request.node.fspath is the location of this test file
         contents = None
 
+        # opens jsonfilepath relative to this file
         with pathlib.Path(__file__).with_name(jsonfilepath).open() as jsonfile:
             contents = json.load(jsonfile)
 
