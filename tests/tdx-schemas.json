@@ -511,4 +511,48 @@
     "prop3": "NUMERIC"
   },
   "sqliteIndex": "CREATE UNIQUE INDEX dataindex ON data(prop1 ASC)"
+},
+{
+  "name": "NDArray Conversion Test",
+  "tags": [
+    "ndarray",
+    "conversion test",
+    "written by Alois Klink",
+    "Test Numbers should start with 0, not 1."
+  ],
+  "schema": {
+    "dataSchema": {
+      "prop1": {
+        "__tdxType": [
+          "ndarray"
+        ]
+      },
+      "prop2": {
+        "__tdxType": [
+          "number"
+        ]
+      },
+      "prop3": {
+        "__tdxType": [
+          "ndarray"
+        ]
+      }
+    },
+    "uniqueIndex": [
+      {
+        "asc": "prop2"
+      }
+    ]
+  },
+  "sqliteSchema": {
+    "prop1": "TEXT",
+    "prop2": "NUMERIC",
+    "prop3": "TEXT"
+  },
+  "generalSchema": {
+    "prop1": "NDARRAY",
+    "prop2": "NUMERIC",
+    "prop3": "NDARRAY"
+  },
+  "sqliteIndex": "CREATE UNIQUE INDEX dataindex ON data(prop2 ASC)"
 }]

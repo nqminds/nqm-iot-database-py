@@ -5,6 +5,7 @@ import pathlib
 import random
 import sqlalchemy.exc
 import os.path
+import numpy as np
 
 import pytest
 from nqm.iotdatabase.database import Database
@@ -46,6 +47,8 @@ def make_val(gen_type, number):
         }
     elif typ is GENERAL_TYPES.ARRAY:
         return [number, 2, 3, 4, 5, 6, "test", {"a": 1, "b": "test"}]
+    elif typ is GENERAL_TYPES.NDARRAY:
+        return np.array(((number, 2), (3, 4)))
     elif typ in {SQL_TYPES.NUMERIC, SQL_TYPES.INTEGER, SQL_TYPES.REAL}:
         return number
     elif typ is SQL_TYPES.TEXT:
