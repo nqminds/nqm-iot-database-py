@@ -6,6 +6,7 @@ import typing as t
 
 import pathlib
 import os
+import tempfile # used for in-memory dbs
 import sqlalchemy
 import sqlalchemy.engine
 import sqlalchemy.dialects.postgresql
@@ -28,14 +29,20 @@ class Database(object):
     Uses SQLite as a backend, but allows for TDX-style commands.
 
     Attributes:
+        general: The SQLite General Schema.
         sqlEngine: The `sqlalchemy` engine used for this connection.
+        table: The `sqlalchemy` data table.
         tdx_schema: The `TDXSchema` used by this dataset.
+        tdx_data_schema: The `tdx_data_schema` for the data.
+        data_dir:
+            The location of the data directory (for saving ndarrays to file)
     """
     general_schema: schemaconverter.GeneralSchema
     sqlEngine: sqlalchemy.engine.Engine
     table: sqlalchemy.Table = None
     tdx_schema: schemaconverter.TDXSchema = TDXSchema(dict())
     tdx_data_schema: schemaconverter.TDXDataSchema = dict()
+    data_dir: t.Union[t.Text, os.PathLike] = ""
 
     def __init__(self,
         path: t.Union[t.Text, os.PathLike],
@@ -157,15 +164,27 @@ class Database(object):
             type: The type of the db: `"file"` or `"memory"`
             mode: The open mode of the db: `"w+"`, `"rw"`, or `"r"`
         """
-        typeEnum = DbTypeEnum(type)
-        if typeEnum == DbTypeEnum.file:
-            try:
-                # makes the directory the sqlite db is in
-                os.makedirs(os.path.dirname(path))
-            except FileExistsError:
-                pass
+        path_to_db = pathlib.Path(path)
 
-        uri = _sqliteutils.sqlAlchemyURL(pathlib.Path(path), typeEnum, mode)
+        typeEnum = DbTypeEnum(type)
+        if typeEnum is DbTypeEnum.file:
+            # makes the directory the sqlite db is in
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            self.data_dir = path_to_db.with_suffix(
+                str(_sqliteconstants.DATABASE.DATA_FOLDER_SUFFIX))
+        else: # in-memory db
+            # autodeleted when self is deleted
+            self.__tmpdir = tempfile.TemporaryDirectory()
+            self.data_dir = self.__tmpdir.name
+
+        os.makedirs(self.data_dir, exist_ok=True)
+        os.makedirs(
+            name = os.path.join(
+                self.data_dir,
+                str(_sqliteconstants.DATABASE.NDARR_FOLDER)),
+            exist_ok=True) # makes the NDArray folder
+
+        uri = _sqliteutils.sqlAlchemyURL(path_to_db, typeEnum, mode)
         # creates the sqlite3 connection
         self.sqlEngine = sqlalchemy.create_engine(uri)
         
@@ -225,7 +244,8 @@ class Database(object):
         
         # convert all the data to SQLite types
         convertRow = schemaconverter.convertRowToSqlite
-        sqlData = [convertRow(general_schema, row) for row in data]
+        sqlData = [
+            convertRow(general_schema, r, data_dir=self.data_dir) for r in data]
 
         if self.table is None:
             raise ValueError("self.table has not been initialized yet")

@@ -16,6 +16,7 @@ class TDX_TYPE(ConstEnum):
     INT = "INT"
     REAL = re.compile(r"REAL|FLOA|DOUB")
     DATE = "date"
+    NDARRAY = "ndarray"
 
 class SQLITE_TYPE(ConstEnum):
     """Valid sqlite schema types
@@ -30,7 +31,7 @@ class SQLITE_GENERAL_TYPE(ConstEnum):
     """
     OBJECT = "OBJECT"
     ARRAY = "ARRAY"
-    JSONMATRIX = "JSON_MATRIX"
+    NDARRAY = "NDARRAY"
 
 class SQLITE_SORT_TYPE(ConstEnum):
     ASC = "ASC"
@@ -50,12 +51,15 @@ class SQLITE(ConstEnum):
     QUERY_LIMIT = 1000
     NULL = "null"
 
-class SqliteConstants(ConstEnum):
-    DATABASE_INFO_TABLE_NAME = "info"
-    DATABASE_DATA_TABLE_NAME = "data"
-    DATABASE_TABLE_INDEX_NAME = "dataindex"
+class DATABASE(ConstEnum):
+    INFO_TABLE_NAME = "info"
+    DATA_TABLE_NAME = "data"
+    DATA_FOLDER_SUFFIX = ".d"
+    NDARR_FOLDER = "ndarr"
+    TABLE_INDEX_NAME = "dataindex"
 
 # exports all the enum members to the module namespace
-DATABASE_INFO_TABLE_NAME = SqliteConstants.DATABASE_INFO_TABLE_NAME
-DATABASE_DATA_TABLE_NAME = SqliteConstants.DATABASE_DATA_TABLE_NAME
-DATABASE_TABLE_INDEX_NAME = SqliteConstants.DATABASE_TABLE_INDEX_NAME
+DATABASE_INFO_TABLE_NAME = DATABASE.INFO_TABLE_NAME
+DATABASE_DATA_TABLE_NAME = DATABASE.DATA_TABLE_NAME
+DATABASE_TABLE_INDEX_NAME = DATABASE.TABLE_INDEX_NAME
+DATABASE_NDARR_FOLDER = DATABASE.NDARR_FOLDER

@@ -7,6 +7,8 @@ name = "pypi"
 sqlalchemy = "*"
 mongosql = {git = "https://github.com/dignio/py-mongosql.git"}
 shortuuid = "*"
+numpy = "*"
+future = "*"
 
 [dev-packages]
 pytest = "*"
