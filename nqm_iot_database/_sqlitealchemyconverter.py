@@ -5,7 +5,7 @@ import sqlalchemy.engine
 import sqlalchemy.event
 
 from . import _sqliteconstants
-from . import _sqliteschemaconverter
+from . import _sqliteschemaconverter as schemaconverter
 
 @sqlalchemy.event.listens_for(sqlalchemy.engine.Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
