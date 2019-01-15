@@ -9,7 +9,7 @@ import sqlalchemy
 import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 import mongosql
-from . import _sqliteschemaconverter
+from . import _sqliteschemaconverter as schemaconverter
 from . import _sqliteconstants
 
 DATABASE_INFO_TABLE_NAME = _sqliteconstants.DATABASE_INFO_TABLE_NAME
