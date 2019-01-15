@@ -9,5 +9,5 @@ setup(
     packages=["nqm_iot_database"],
     url="https://github.com/nqminds/nqm-iot-database-py",
     description="Python port of nqminds/nqm-iot-database-utils",
-    install_requires=["sqlalchemy", "mongosql", "tempfile"]
+    install_requires=["sqlalchemy", "mongosql"]
 )
