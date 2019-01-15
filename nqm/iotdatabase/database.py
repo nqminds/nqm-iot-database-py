@@ -232,6 +232,14 @@ class Database(object):
             >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
             >>> db.addData([{"a": 1}, {"a": 2}]) == {"count": 2}
             True
+            >>> #insert ndarray
+            >>> import numpy as np
+            >>> nd_db = Database("", "memory", "w+")
+            >>> nd_dschema = {"a": {"__tdxType": ["ndarray"]}}
+            >>> nd_id = nd_db.createDatabase(schema={"dataSchema": nd_dschema})
+            >>> array = np.array([[0, 1],[2, 3]])
+            >>> nd_db.addData([{"a": array}]) == {"count": 1}
+            True
 
         Args:
             data: A list of rows, where each row is a mapping of ``{key: val}``
