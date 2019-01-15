@@ -1,0 +1,171 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>nqm-iot-database-utils-python &#8212; nqm-iot-database-utils-python  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing Rules" href="CONTRIBUTING.html" />
+    <link rel="prev" title="Welcome to nqm-iot-database-utils-python’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="nqm-iot-database-utils-python">
+<span id="nqm-iot-database-utils-python"></span><h1>nqm-iot-database-utils-python<a class="headerlink" href="#nqm-iot-database-utils-python" title="Permalink to this headline">¶</a></h1>
+<p>Python port of
+<a class="reference external" href="https://github.com/nqminds/nqm-iot-database-utils"><code class="docutils literal notranslate"><span class="pre">nqminds/nqm-iot-database-utils</span></code></a></p>
+<div class="section" id="installing">
+<span id="installing"></span><h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
+<p>Use the below to install dependecies</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv install
+</pre></div>
+</div>
+</div>
+<div class="section" id="documentation">
+<span id="documentation"></span><h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<p>We use Sphinx, Autodoc, Napoleon, and
+<a class="reference external" href="https://github.com/agronholm/sphinx-autodoc-typehints"><code class="docutils literal notranslate"><span class="pre">sphinx_autodoc_typehints</span></code></a>
+to make our documentation.</p>
+<p>The below creates html.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv run make html
+</pre></div>
+</div>
+</div>
+<div class="section" id="tests">
+<span id="tests"></span><h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="unittests">
+<span id="unittests"></span><h3>Unittests<a class="headerlink" href="#unittests" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv run python -m pytest
+</pre></div>
+</div>
+</div>
+<div class="section" id="unittests-coverage">
+<span id="unittests-coverage"></span><h3>Unittests Coverage<a class="headerlink" href="#unittests-coverage" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv run coverage run --source<span class="o">=</span>nqm -m pytest <span class="o">&amp;&amp;</span> pipenv run coverage report
+</pre></div>
+</div>
+</div>
+<div class="section" id="typetests">
+<span id="typetests"></span><h3>Typetests<a class="headerlink" href="#typetests" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv run mypy -m nqm.iotdatabase._sqliteschemaconverter <span class="o">&amp;&amp;</span> <span class="nb">echo</span> -e <span class="s2">&quot;\e[1;32mPass! \e[0m&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="doctests">
+<span id="doctests"></span><h3>Doctests<a class="headerlink" href="#doctests" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv run make doctest
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="changes-to-make-in-sqlalchemy">
+<span id="changes-to-make-in-sqlalchemy"></span><h2>Changes to make in SQLAlchemy<a class="headerlink" href="#changes-to-make-in-sqlalchemy" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Add sorting on Primary Keys (SQLite feature)</li>
+<li>allow using SQLite URI connections</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">nqm-iot-database-utils-python</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">README.md</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installing">Installing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#documentation">Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tests">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changes-to-make-in-sqlalchemy">Changes to make in SQLAlchemy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to nqm-iot-database-utils-python’s documentation!</a></li>
+      <li>Next: <a href="CONTRIBUTING.html" title="next chapter">Contributing Rules</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Alois Klink.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/README.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
