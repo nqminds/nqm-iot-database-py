@@ -7,10 +7,17 @@ Python port of
 
 ## Installing
 
-Use the below to install dependecies
+Use the below to install dependencies
 
 ```bash
 pipenv install
+```
+
+And use the following to install development dependencies for testing
+and building documentation:
+
+```bash
+pipenv install --dev
 ```
 
 ## Documentation
