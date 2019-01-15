@@ -16,7 +16,7 @@ import shortuuid
 from . import _sqliteconstants
 from . import _sqliteutils
 from . import _sqliteinfotable
-from . import _sqliteschemaconverter
+from . import _sqliteschemaconverter as schemaconverter
 from . import _sqlitealchemyconverter
 
 DbTypeEnum = _sqliteutils.DbTypeEnum
