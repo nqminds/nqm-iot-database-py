@@ -3,9 +3,9 @@ import typing as t
 import pathlib
 import os
 from .database import Database
-import ._sqliteutils as _sqliteutils
-import ._sqliteinfotable as _sqliteinfotable
-import ._sqliteschemaconverter as schemaconverter
+from . import _sqliteutils
+from . import _sqliteinfotable
+from . import _sqliteschemaconverter
 import sqlite3
 import sqlalchemy
 import sqlalchemy.engine

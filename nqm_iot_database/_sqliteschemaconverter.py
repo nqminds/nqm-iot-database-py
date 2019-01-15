@@ -6,8 +6,8 @@ import json
 import collections
 import os
 
-import ._sqliteconstants as _sqliteconstants
-import ._ndarray as _ndarray
+from . import _sqliteconstants
+from . import _ndarray
 
 SQLITE_TYPE = _sqliteconstants.SQLITE_TYPE
 TDX_TYPE = _sqliteconstants.TDX_TYPE

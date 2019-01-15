@@ -13,11 +13,11 @@ import sqlalchemy.dialects.postgresql
 
 import shortuuid
 
-import ._sqliteconstants as _sqliteconstants
-import ._sqliteutils as _sqliteutils
-import ._sqliteinfotable as _sqliteinfotable
-import ._sqliteschemaconverter as schemaconverter
-import ._sqlitealchemyconverter as alchemyconverter
+from . import _sqliteconstants
+from . import _sqliteutils
+from . import _sqliteinfotable
+from . import _sqliteschemaconverter
+from . import _sqlitealchemyconverter
 
 DbTypeEnum = _sqliteutils.DbTypeEnum
 TDXSchema = schemaconverter.TDXSchema
