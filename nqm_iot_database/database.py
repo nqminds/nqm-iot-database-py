@@ -13,11 +13,11 @@ import sqlalchemy.dialects.postgresql
 
 import shortuuid
 
-import nqm.iotdatabase._sqliteconstants as _sqliteconstants
-import nqm.iotdatabase._sqliteutils as _sqliteutils
-import nqm.iotdatabase._sqliteinfotable as _sqliteinfotable
-import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
-import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
+import ._sqliteconstants as _sqliteconstants
+import ._sqliteutils as _sqliteutils
+import ._sqliteinfotable as _sqliteinfotable
+import ._sqliteschemaconverter as schemaconverter
+import ._sqlitealchemyconverter as alchemyconverter
 
 DbTypeEnum = _sqliteutils.DbTypeEnum
 TDXSchema = schemaconverter.TDXSchema
@@ -227,7 +227,7 @@ class Database(object):
         """Add data to a database resource.
 
         Example:
-            >>> from nqm.iotdatabase.database import Database
+            >>> from nqm_iot_database.database import Database
             >>> db = Database("", "memory", "w+");
             >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
             >>> db.addData([{"a": 1}, {"a": 2}]) == {"count": 2}

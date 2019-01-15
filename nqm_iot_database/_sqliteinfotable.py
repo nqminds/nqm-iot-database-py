@@ -9,8 +9,8 @@ import sqlalchemy
 import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 import mongosql
-import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
-import nqm.iotdatabase._sqliteconstants as _sqliteconstants
+import ._sqliteschemaconverter as schemaconverter
+import ._sqliteconstants as _sqliteconstants
 
 DATABASE_INFO_TABLE_NAME = _sqliteconstants.DATABASE_INFO_TABLE_NAME
 SQLITE_TXT = _sqliteconstants.SQLITE_TYPE.TEXT
