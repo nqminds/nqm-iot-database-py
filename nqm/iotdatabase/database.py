@@ -190,6 +190,17 @@ class Database(object):
         
         self.connection = self.sqlEngine.connect().execution_options(
             autocommit=True)
+
+        # check to see if this is an already created database
+        if _sqliteinfotable.checkInfoTable(self.sqlEngine):
+            # check if old id exists
+            infovals = _sqliteinfotable.getInfoKeys(
+                self.sqlEngine, ["id", "schema"])
+            # use the original id if we can find it
+            id = str(infovals.get("id"))
+            schema = infovals.get("schema", None)
+            self.createDatabase(id=id, schema=schema)
+
         return self
 
     def compatibleSchema(self,
