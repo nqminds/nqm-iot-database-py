@@ -98,7 +98,14 @@ def makePrefix():
     unix_bytes = unix_time_ms.to_bytes(8, byteorder="big")
     return base64.urlsafe_b64encode(unix_bytes).decode("ascii")
 
-def saveNDArray(array: np.ndarray, filepath = "", relative_loc = ""):
+def saveNDArray(
+    array: np.ndarray,
+    filepath = "",
+    relative_loc = "",
+    save_abs_path: bool = False
+):
+    """Saves an array in the given location
+    """
     open_file = None
     if filepath:
         path = os.path.join(relative_loc, filepath)
@@ -109,7 +116,10 @@ def saveNDArray(array: np.ndarray, filepath = "", relative_loc = ""):
             dir=relative_loc,
             prefix=str(makePrefix()),
             suffix=".dat")
-
+    
+    filepath = open_file.name
+    # pointer is a relative/absolute filepath to the binary matrix file
+    pointer = filepath if save_abs_path else os.path.basename(filepath)
     with open_file as datafile:
         c_order = array.flags.c_contiguous
         datafile.write(array.tobytes("C" if c_order else "F"))
@@ -135,8 +145,10 @@ def getNDArray(metadata: NDArray, relative_loc="") -> np.ndarray:
             f"Only versions {supportedVersions} are supported.")
     dtype = np.dtype(md.t)
     order = "C" if md.c else "F"
+    # relative_loc is the data folder
+    # md.p is either the name of the data, or an absolute path
     path = os.path.join(relative_loc, md.p)
-    return np.memmap( # mode="c" is copy-on-write, changes are made in RAM copy
+    return np.memmap( # mode="c" is copy-on-write, changes are made in RAM
         filename = path, dtype=dtype, mode="c", shape=md.s, order=order)
 
 def deleteNDArray(metadata: NDArray, relative_loc=""):

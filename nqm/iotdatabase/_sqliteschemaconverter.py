@@ -207,11 +207,9 @@ def convertToSqlite(
         return to_text(json.dumps(value))
 
     def ndarray(array):
-        loc = os.path.join(
-                data_dir, str(_sqliteconstants.DATABASE.NDARR_FOLDER))
         return _ndarray.saveNDArray(
             array,
-            relative_loc = loc).tojson()
+            relative_loc = data_dir).tojson()
 
     # map of types to funcs that covert from that type
     converter: t.Dict[GeneralSQLiteVal, t.Callable] = {

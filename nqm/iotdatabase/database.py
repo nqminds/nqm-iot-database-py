@@ -177,12 +177,7 @@ class Database(object):
             self.__tmpdir = tempfile.TemporaryDirectory()
             self.data_dir = self.__tmpdir.name
 
-        os.makedirs(self.data_dir, exist_ok=True)
-        os.makedirs(
-            name = os.path.join(
-                self.data_dir,
-                str(_sqliteconstants.DATABASE.NDARR_FOLDER)),
-            exist_ok=True) # makes the NDArray folder
+        os.makedirs(self.data_dir, exist_ok=True) # makes the data folder
 
         uri = _sqliteutils.sqlAlchemyURL(path_to_db, typeEnum, mode)
         # creates the sqlite3 connection
