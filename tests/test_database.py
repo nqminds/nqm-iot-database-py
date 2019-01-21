@@ -6,6 +6,7 @@ import random
 import sqlalchemy.exc
 import os.path
 import numpy as np
+from nqm.iotdatabase._warnings import EmptyDictWarning
 
 import pytest
 from nqm.iotdatabase.database import Database
@@ -79,7 +80,11 @@ def inmemdb():
 @pytest.fixture()
 def db(inmemdb, schema):
     """When used as a fixture, creates a db with every schema in schema()"""
-    inmemdb.createDatabase(schema=schema)
+    if schema:
+        inmemdb.createDatabase(schema=schema)
+    else:
+        with pytest.warns(EmptyDictWarning):
+            inmemdb.createDatabase(schema=schema)
     return inmemdb
 
 @pytest.mark.dependency(depends=["test_create_dataset"])

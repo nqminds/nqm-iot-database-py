@@ -6,11 +6,12 @@ import typing as t
 
 import pathlib
 import os
+import warnings
 import tempfile # used for in-memory dbs
+
 import sqlalchemy
 import sqlalchemy.engine
 import sqlalchemy.dialects.postgresql
-
 import shortuuid
 
 import nqm.iotdatabase._sqliteconstants as _sqliteconstants
@@ -18,6 +19,7 @@ import nqm.iotdatabase._sqliteutils as _sqliteutils
 import nqm.iotdatabase._sqliteinfotable as _sqliteinfotable
 import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
 import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
+from nqm.iotdatabase._warnings import EmptyDictWarning
 
 DbTypeEnum = _sqliteutils.DbTypeEnum
 TDXSchema = schemaconverter.TDXSchema
@@ -144,7 +146,8 @@ class Database(object):
         sqlite_schema = schemaconverter.mapSchema(self.general_schema)
 
         if not sqlite_schema:
-            # TODO Maybe add error (none now matches nqm-iot-database-utils)
+            warnings.warn(EmptyDictWarning(
+                "given schema was empty, not creating a data table"))
             return id
 
         self.table = alchemyconverter.makeDataTable(
