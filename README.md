@@ -7,17 +7,21 @@ Python port of
 
 ## Installing
 
-Use the below to install dependencies
+Use the below to install as a library using `pip`:
 
 ```bash
-pipenv install
+# for SSH:
+# pip3 install pipenv install git+ssh://git@github.com/nqminds/nqm-iot-database-py.git#egg=nqm-iot-database-py
+pip3 install pipenv install git+https://github.com/nqminds/nqm-iot-database-py.git#egg=nqm-iot-database.py
 ```
 
-And use the following to install development dependencies for testing
-and building documentation:
+To download the library, install dependencies for running tests, and build
+documentation, do:
 
 ```bash
-pipenv install --dev
+git clone https://github.com/nqminds/nqm-iot-database-py.git
+cd nqm-iot-database-py/
+pipenv --python 3 install --dev
 ```
 
 ## Documentation
@@ -49,7 +53,7 @@ pipenv run coverage run --source=nqm -m pytest && pipenv run coverage report
 ### Typetests
 
 ```bash
-pipenv run mypy -m nqm.iotdatabase._sqliteschemaconverter && echo -e "\e[1;32mPass! \e[0m"
+pipenv run mypy -m nqm.iotdatabase && echo -e "\e[1;32mPass! \e[0m"
 ```
 
 ### Doctests
@@ -58,7 +62,7 @@ pipenv run mypy -m nqm.iotdatabase._sqliteschemaconverter && echo -e "\e[1;32mPa
 pipenv run make doctest
 ```
 
-## Changes to make in SQLAlchemy
+## Possible upgrades to make in SQLAlchemy
 
 - Add sorting on Primary Keys (SQLite feature)
-- allow using SQLite URI connections
+- allow using SQLite URI connections (for read-only)
