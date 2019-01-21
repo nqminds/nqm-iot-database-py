@@ -13,11 +13,11 @@ import sqlalchemy.dialects.postgresql
 
 import shortuuid
 
-from . import _sqliteconstants
-from . import _sqliteutils
-from . import _sqliteinfotable
-from . import _sqliteschemaconverter as schemaconverter
-from . import _sqlitealchemyconverter
+import nqm.iotdatabase._sqliteconstants as _sqliteconstants
+import nqm.iotdatabase._sqliteutils as _sqliteutils
+import nqm.iotdatabase._sqliteinfotable as _sqliteinfotable
+import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
+import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
 
 DbTypeEnum = _sqliteutils.DbTypeEnum
 TDXSchema = schemaconverter.TDXSchema
@@ -190,6 +190,17 @@ class Database(object):
         
         self.connection = self.sqlEngine.connect().execution_options(
             autocommit=True)
+
+        # check to see if this is an already created database
+        if _sqliteinfotable.checkInfoTable(self.sqlEngine):
+            # check if old id exists
+            infovals = _sqliteinfotable.getInfoKeys(
+                self.sqlEngine, ["id", "schema"])
+            # use the original id if we can find it
+            id = str(infovals.get("id"))
+            schema = infovals.get("schema", None)
+            self.createDatabase(id=id, schema=schema)
+
         return self
 
     def compatibleSchema(self,
@@ -227,7 +238,7 @@ class Database(object):
         """Add data to a database resource.
 
         Example:
-            >>> from nqm_iot_database.database import Database
+            >>> from nqm.iotdatabase.database import Database
             >>> db = Database("", "memory", "w+");
             >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
             >>> db.addData([{"a": 1}, {"a": 2}]) == {"count": 2}

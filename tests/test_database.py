@@ -118,6 +118,5 @@ def test_file_db(tmpdir):
 
     # reload database
     filedb = make_filedb(os.path.join(tmpdir, "testdb.sqlite"))
-    filedb.createDatabase(schema=schema)
     with pytest.raises(sqlalchemy.exc.IntegrityError):
         filedb.addData([data[0]]) # should cause uniqueIndex error

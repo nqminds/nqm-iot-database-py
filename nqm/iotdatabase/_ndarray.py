@@ -111,7 +111,8 @@ def saveNDArray(array: np.ndarray, filepath = "", relative_loc = ""):
             suffix=".dat")
 
     with open_file as datafile:
-        datafile.write(array.tobytes(None))
+        c_order = array.flags.c_contiguous
+        datafile.write(array.tobytes("C" if c_order else "F"))
     return NDArray.from_array(array, pointer=open_file.name, version="f")
 
 supportedVersions = {"f"}
