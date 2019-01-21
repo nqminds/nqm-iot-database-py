@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-	name='nqm-iot-database-utils-py',
+	name='nqm-iot-database-py',
 	version='1',
 	packages=['nqm.iotdatabase'],
 	author='Alois Klink',
