@@ -97,12 +97,13 @@ def test_insert_dataset(db, schema):
 def test_insert_nonunique_error(inmemdb, unique_schema):
     inmemdb.createDatabase(schema=unique_schema)
     number = 100
-    data = make_data(unique_schema, number)
-    assert inmemdb.addData(data) == {"count": number}
-    repeatNum = random.randint(0, number)
+    data = make_data(unique_schema, number+1)
+    assert inmemdb.addData(data[:number]) == {"count": number}
     # TODO: Maybe make our own Error type if something goes wrong?
     with pytest.raises(sqlalchemy.exc.IntegrityError):
-        inmemdb.addData([data[repeatNum]])
+        inmemdb.addData([data[0]]) # adding invalid same data again
+    # check that inserting more data works after an exception
+    assert inmemdb.addData([data[number]]) == {"count": 1}
 
 def make_filedb(filepath):
     return Database(filepath, "file", "w+")

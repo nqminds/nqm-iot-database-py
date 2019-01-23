@@ -27,15 +27,22 @@ def datadir(tmpdir_factory):
     os.makedirs(datadir, exist_ok=True)
     return datadir
 
-def test_saving_loading(dtype, shape, c_order, fileformat, datadir):
+@pytest.fixture
+def arr(dtype, shape, c_order):
     a = np.random.random_sample(shape)
     if c_order: a = np.ascontiguousarray(a, np.dtype(dtype))
     else: a = np.asfortranarray(a, np.dtype(dtype))
 
-    metadata1 = _ndarray.saveNDArray(a, datadir, storage_method=fileformat)
-    metadata2 = _ndarray.saveNDArray(a+2, datadir, storage_method=fileformat)
+    return a
 
-    assert np.array_equal(a, _ndarray.getNDArray(metadata1, datadir))
-    a2 = _ndarray.getNDArray(metadata2, datadir)
-    assert not np.array_equal(a, a2)
-    assert np.array_equal(a+2, a2)
+def test_saving_loading(arr, fileformat, datadir):
+    a = arr
+
+    metadata1 = _ndarray.saveNDArray(arr, datadir, storage_method=fileformat)
+    metadata2 = _ndarray.saveNDArray(arr+2, datadir, storage_method=fileformat)
+
+    assert np.array_equal(arr, _ndarray.getNDArray(metadata1, datadir))
+    arr2 = _ndarray.getNDArray(metadata2, datadir)
+    assert not np.array_equal(arr, arr2)
+    assert np.array_equal(arr+2, arr2)
+
