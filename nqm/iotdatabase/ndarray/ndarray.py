@@ -42,7 +42,7 @@ class NDArray(object):
         c: True if using C-type column ordering
 
     Example:
-    >>>from nqm.iotdatabase._ndarray import NDArray
+    >>>from nqm.iotdatabase.ndarray import NDArray
     >>>arr = NDArray(
         # numpy typestring, h means signed 16-bit int and = means native align
         t = "=h",

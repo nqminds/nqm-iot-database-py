@@ -1,5 +1,5 @@
 import pytest
-import nqm.iotdatabase._ndarray as _ndarray
+import nqm.iotdatabase.ndarray as _ndarray
 import numpy as np
 import os
 

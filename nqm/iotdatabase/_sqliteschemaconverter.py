@@ -7,7 +7,7 @@ import collections
 import os
 
 import nqm.iotdatabase._sqliteconstants as _sqliteconstants
-import nqm.iotdatabase._ndarray as _ndarray
+import nqm.iotdatabase.ndarray as _ndarray
 
 SQLITE_TYPE = _sqliteconstants.SQLITE_TYPE
 TDX_TYPE = _sqliteconstants.TDX_TYPE
