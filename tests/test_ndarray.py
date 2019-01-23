@@ -46,3 +46,6 @@ def test_saving_loading(arr, fileformat, datadir):
     assert not np.array_equal(arr, arr2)
     assert np.array_equal(arr+2, arr2)
 
+def test_saving_as_pure_json(arr):
+    json = _ndarray.saveToPureJSON(arr)
+    assert np.array_equal(_ndarray.loadFromPureJSON(json), arr)
