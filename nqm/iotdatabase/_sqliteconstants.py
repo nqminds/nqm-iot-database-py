@@ -1,3 +1,5 @@
+# pylint: disable=invalid-name
+"""Stores constants for library"""
 import enum
 import re
 
@@ -34,17 +36,22 @@ class SQLITE_GENERAL_TYPE(ConstEnum):
     NDARRAY = "NDARRAY"
 
 class SQLITE_SORT_TYPE(ConstEnum):
+    """Stores the SQLite string used to determine the sort direction"""
     ASC = "ASC"
     DESC = "DESC"
 
 class TDX_SORT_TYPE(ConstEnum):
+    """Stores the TDX string used to determine the sort direction"""
     ASC = "asc"
     DESC = "desc"
 
 class TDX(ConstEnum):
+    """Namespace class so TDX_TYPE can be used as TDX.TYPE"""
     TYPE = TDX_TYPE
+    SORT_TYPE = TDX_SORT_TYPE
 
 class SQLITE(ConstEnum):
+    """Stores Enums releated to SQLITE"""
     TYPE = SQLITE_TYPE
     SORT_TYPE = SQLITE_SORT_TYPE
     GENERAL_TYPE = SQLITE_GENERAL_TYPE
@@ -52,6 +59,7 @@ class SQLITE(ConstEnum):
     NULL = "null"
 
 class DATABASE(ConstEnum):
+    """Stores database constants"""
     INFO_TABLE_NAME = "info"
     DATA_TABLE_NAME = "data"
     DATA_FOLDER_SUFFIX = ".d"
