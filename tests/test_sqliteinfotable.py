@@ -29,11 +29,9 @@ def blank_table(in_mem_db):
 
 def test_createInfoTable(in_mem_db):
     infotable.createInfoTable(in_mem_db)
-    with pytest.raises(
-        Exception,
-        message="Was expecting 2nd createInfoTable to fail"
-    ):
+    with pytest.raises(Exception):
         infotable.createInfoTable(in_mem_db)
+        pytest.fail("Was expecting 2nd createInfoTable to fail")
 
 def json_keys(jsonfilepath="infokeys.json"):
     with pathlib.Path(__file__).with_name(jsonfilepath).open() as jsonfile:

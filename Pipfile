@@ -18,6 +18,7 @@ sphinxcontrib-napoleon = "*"
 sphinx = "*"
 sphinx-autodoc-typehints = "*"
 recommonmark = "*"
+pylint = "*"
 
 [requires]
 python_version = "3.6"

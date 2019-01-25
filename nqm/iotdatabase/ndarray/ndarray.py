@@ -1,11 +1,9 @@
-"""Stores functions about storing ndarrays in dbs.
+"""Stores the NDArray array class, that contains NDArray metadata.
+
+This can be used to store an NDArray as a JSON object.
 """
 import typing as ty
-import numpy as np
-import os
-import tempfile
-import time
-import base64
+import numpy as np # only used for typing
 import json
 
 np_type_to_single_char: ty.Dict[ty.Text, np.dtype] = {
@@ -15,6 +13,7 @@ np_type_to_single_char: ty.Dict[ty.Text, np.dtype] = {
 """Dict of single-chars to numpy types, ie p is an int64, P uint64"""
 
 varlength_types = {"O", "U", "V"}
+"""Set of Numpy types that require a length to be specified"""
 
 def basictypestring(
     charBuiltinType: ty.Text,
@@ -43,7 +42,7 @@ class NDArray(object):
         c: True if using C-type column ordering
 
     Example:
-    >>>from nqm.iotdatabase._ndarray import NDArray
+    >>>from nqm.iotdatabase.ndarray import NDArray
     >>>arr = NDArray(
         # numpy typestring, h means signed 16-bit int and = means native align
         t = "=h",
@@ -114,76 +113,3 @@ class NDArray(object):
 
     def tojson(self) -> ty.Text:
         return json.dumps(self.todict())
-
-def makePrefix():
-    unix_time_ms = int(time.time() * 1000)
-    unix_bytes = unix_time_ms.to_bytes(8, byteorder="big")
-    return base64.urlsafe_b64encode(unix_bytes).decode("ascii")
-
-def saveNDArray(
-    array: np.ndarray,
-    filepath = "",
-    relative_loc = "",
-    save_abs_path: bool = False
-):
-    """Saves an array in the given location
-    """
-    open_file = None
-    if filepath:
-        path = os.path.join(relative_loc, filepath)
-        open_file = open(path, "wb")
-    else: # make pseudo-random filename
-        open_file = tempfile.NamedTemporaryFile(
-            delete=False, # do not delete automatically
-            dir=relative_loc,
-            prefix=str(makePrefix()),
-            suffix=".dat")
-    
-    filepath = open_file.name
-    # pointer is a relative/absolute filepath to the binary matrix file
-    pointer = filepath if save_abs_path else os.path.basename(filepath)
-    with open_file as datafile:
-        c_order = array.flags.c_contiguous
-        datafile.write(array.tobytes("C" if c_order else "F"))
-    return NDArray.from_array(array, pointer=open_file.name, version="f")
-
-supportedVersions = {"f"}
-"""Stores the supported versions for loading a file"""
-
-def getNDArray(metadata: NDArray, relative_loc="") -> np.ndarray:
-    """Opens an NDArray object as a numpy array
-
-    Args:
-        metadata: The object containing the array metadata.
-        relative_loc: Relative location of any filepaths.
-    
-    Returns:
-        A copy-on-write numpy array loaded for the metadata.
-    """
-    md = metadata
-    if md.v not in supportedVersions:
-        raise NotImplementedError(
-            f"Loading NDArray with version {md.v} failed!"
-            f"Only versions {supportedVersions} are supported.")
-    dtype = np.dtype(md.t)
-    order = "C" if md.c else "F"
-    # relative_loc is the data folder
-    # md.p is either the name of the data, or an absolute path
-    path = os.path.join(relative_loc, md.p)
-    return np.memmap( # mode="c" is copy-on-write, changes are made in RAM
-        filename = path, dtype=dtype, mode="c", shape=md.s, order=order)
-
-def deleteNDArray(metadata: NDArray, relative_loc=""):
-    """Deletes the given NDArray.
-
-    Args:
-        metadata: The object containing the array metadata.
-        relative_loc: Relative location of any filepaths.
-    """
-    md = metadata
-    if md.v not in supportedVersions:
-        raise NotImplementedError(
-            f"Deleting NDArray with version {md.v} failed!"
-            f"Only versions {supportedVersions} are supported.")
-    path = os.path.join(relative_loc, md.p)
-    os.unlink(md.p)

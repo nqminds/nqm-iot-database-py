@@ -62,6 +62,12 @@ pipenv run mypy -m nqm.iotdatabase && echo -e "\e[1;32mPass! \e[0m"
 pipenv run make doctest
 ```
 
+### Linting
+
+```bash
+pipenv run pylint nqm
+```
+
 ## Possible upgrades to make in SQLAlchemy
 
 - Add sorting on Primary Keys (SQLite feature)
