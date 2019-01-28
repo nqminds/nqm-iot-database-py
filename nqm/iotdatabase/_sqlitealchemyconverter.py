@@ -4,6 +4,8 @@ import sqlalchemy.types
 import sqlalchemy.engine
 import sqlalchemy.event
 
+import mongosql
+
 import nqm.iotdatabase._sqliteconstants as _sqliteconstants
 import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
 
@@ -71,33 +73,56 @@ def makeIndexArg(
     return column 
 
 def makeIndexes(
-    table: sqlalchemy.Table,
     columns: t.Mapping[t.Text, sqlalchemy.sql.expression.ColumnElement],
     tdx_schema: schemaconverter.TDXSchema
-):
-    """Makes the unique and non-unique indexes for a table.
+) -> t._NoReturn:
+    """Makes the unique and non-unique indexes for a inplace.
 
     Args:
-        table: The uncreated SQLAlchemy table to add the indexes to.
-        columns: A dict of {col: sqlalchemy columns}
+        columns: A dict of {col: sqlalchemy columns}. Mutated.
+            These can then be passed as the attributes of a new
+            ORM class.
+            The ``"__table_args__"`` of the field will be modified to hold
+            the indexes.
         tdx_schema: The TDX Schema containing the index specification.
+
+    Example:
+        >>> import nqm.iotdatabase._sqlitealchemyconverter as convert
+        >>> from sqlalchemy.ext.declarative import declarative_base
+        >>> from sqlalchemy import Column, String
+        >>> Base = declarative_base()
+        >>> columns = {"name": Column(String)}
+        >>> schema = {"uniqueIndex": [{"asc": "name"}]}
+        >>> convert.makeIndexes(columns, schema)
+        >>> NameModel = type("NameModel", (Base,), columns)
     """
+    table_args = []
     primary_index = t.cast(
         t.Sequence[SortCol], tdx_schema["uniqueIndex"])
     p_args = [makeIndexArg(x, columns) for x in primary_index]
     if p_args: # make primary key constraint if it exists
-        table.append_constraint(sqlalchemy.PrimaryKeyConstraint(
+        table_args.append(sqlalchemy.PrimaryKeyConstraint(
             *p_args, name=str(_sqliteconstants.DATABASE_TABLE_INDEX_NAME)
         ))
-    
+    else:
+        # make an interger primary key if no other primary key exists
+        # SQLAlchemy ORM requires a primary key
+        rowid_name = "_id"
+        columns[rowid_name] = sqlalchemy.schema.Column(
+            name=rowid_name,
+            type_=sqlalchemy.INTEGER,
+            primary_key=True, quote=True)
+
     non_unique_indexes = t.cast(
         t.Sequence[t.Sequence[SortCol]],
         tdx_schema.get("nonUniqueIndexes", []))
     for index in non_unique_indexes:
         i_args = [makeIndexArg(x, columns) for x in index]
-        table.append_constraint(sqlalchemy.schema.Index(
+        table_args.append(sqlalchemy.schema.Index(
             *i_args
         ))
+
+    columns["__table_args__"] = tuple(table_args)
 
 def makeDataTable(
     connection: sqlalchemy.engine.Engine,
@@ -114,18 +139,23 @@ def makeDataTable(
     Returns:
         The uncreated SQLAlchemy table specification.
     """
-    metadata = sqlalchemy.MetaData(connection)
-    Data = sqlalchemy.Table(
-        _sqliteconstants.DATABASE_DATA_TABLE_NAME, metadata, quote=True)
+    Base = sqlalchemy.ext.declarative.declarative_base(
+        cls=(mongosql.MongoSqlBase,))
+    columns = {
+        "__tablename__": _sqliteconstants.DATABASE_DATA_TABLE_NAME
+    }
     # store the created columns for creating the indexes later
-    columns = dict()
     for column, sqlite_type in sqliteSchema.items():
+        type_ = convertToSqlAlchemy(sqlite_type)
         new_col = sqlalchemy.schema.Column(
             name=column,
-            type_=convertToSqlAlchemy(sqlite_type)
+            type_=type_,
+            quote=True, # make sure column name is exactly what is given
         )
-        Data.append_column(new_col)
-        columns[column] = Data.c.__getattr__(column)
+        columns[column] = new_col
 
-    makeIndexes(Data, columns, tdxSchema)
-    return Data
+    makeIndexes(columns, tdxSchema)
+    # makes a new class Data that inherits from Base that has the attrs
+    # given in columns
+    Data = type("Data", (Base,), columns)
+    return Data.__table__
