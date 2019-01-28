@@ -19,7 +19,7 @@ sqlalchemyMap: t.Dict[
 ] = {
     _sqliteconstants.SQLITE_TYPE.INTEGER: sqlalchemy.types.Integer,
     _sqliteconstants.SQLITE_TYPE.TEXT: sqlalchemy.types.String,
-    _sqliteconstants.SQLITE_TYPE.NUMERIC: sqlalchemy.types.Numeric,
+    _sqliteconstants.SQLITE_TYPE.NUMERIC: sqlalchemy.types.REAL,
     _sqliteconstants.SQLITE_TYPE.REAL: sqlalchemy.types.REAL,
     _sqliteconstants.SQLITE_TYPE.INTEGER: sqlalchemy.types.Integer
 }
