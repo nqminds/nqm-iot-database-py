@@ -7,9 +7,11 @@ import typing as t
 import pathlib
 import os
 import tempfile # used for in-memory dbs
+
 import sqlalchemy
 import sqlalchemy.engine
 import sqlalchemy.dialects.postgresql
+import sqlalchemy.ext.automap
 
 import shortuuid
 
@@ -32,6 +34,7 @@ class Database(object):
         general: The SQLite General Schema.
         sqlEngine: The `sqlalchemy` engine used for this connection.
         table: The `sqlalchemy` data table.
+        table_model: The SQLAlchemy ORM (model) of the `sqlalchemy` data table.
         tdx_schema: The `TDXSchema` used by this dataset.
         tdx_data_schema: The `tdx_data_schema` for the data.
         data_dir:
@@ -40,6 +43,7 @@ class Database(object):
     general_schema: schemaconverter.GeneralSchema
     sqlEngine: sqlalchemy.engine.Engine
     table: sqlalchemy.Table = None
+    table_model = None
     tdx_schema: schemaconverter.TDXSchema = TDXSchema(dict())
     tdx_data_schema: schemaconverter.TDXDataSchema = dict()
     data_dir: t.Union[t.Text, os.PathLike] = ""
@@ -149,7 +153,11 @@ class Database(object):
 
         self.table = alchemyconverter.makeDataTable(
             db, sqlite_schema, tdxSchema)
-        self.table.create(checkfirst=True) # create unless already exists
+        self.table.create(self.sqlEngine,  checkfirst=True) # create unless already exists
+        Base = sqlalchemy.ext.automap.automap_base()
+        Base.prepare(self.sqlEngine, reflect=True)
+        self.table_model = Base.classes.data
+
         return id
 
     def openDatabase(self,
