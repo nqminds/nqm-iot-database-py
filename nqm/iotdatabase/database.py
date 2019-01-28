@@ -11,7 +11,6 @@ import tempfile # used for in-memory dbs
 import sqlalchemy
 import sqlalchemy.engine
 import sqlalchemy.dialects.postgresql
-import sqlalchemy.ext.automap
 import mongosql
 
 import shortuuid
@@ -154,12 +153,10 @@ class Database(object):
             # TODO Maybe add error (none now matches nqm-iot-database-utils)
             return id
 
-        self.table = alchemyconverter.makeDataTable(
+        self.table_model = alchemyconverter.makeDataModel(
             db, sqlite_schema, tdxSchema)
+        self.table = self.table_model.__table__
         self.table.create(self.sqlEngine,  checkfirst=True) # create unless already exists
-        Base = sqlalchemy.ext.automap.automap_base()
-        Base.prepare(self.sqlEngine, reflect=True)
-        self.table_model = Base.classes.data
 
         return id
 

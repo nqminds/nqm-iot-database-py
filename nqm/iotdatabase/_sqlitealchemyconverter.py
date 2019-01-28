@@ -124,12 +124,12 @@ def makeIndexes(
 
     columns["__table_args__"] = tuple(table_args)
 
-def makeDataTable(
+def makeDataModel(
     connection: sqlalchemy.engine.Engine,
     sqliteSchema: t.Mapping[t.Text, _sqliteconstants.SQLITE_TYPE],
     tdxSchema: schemaconverter.TDXSchema
-) -> sqlalchemy.Table:
-    """Makes an SQLAlchemy table for storing data based on a TDX Schema.
+) -> mongosql.MongoSqlBase:
+    """Makes an SQLAlchemy ORM (model) for storing data based on a TDX Schema.
 
     Args:
         connection: The SQLAlchemy Engine that has the database information.
@@ -137,7 +137,7 @@ def makeDataTable(
         tdxSchema: The TDX schema with the index specification.
 
     Returns:
-        The uncreated SQLAlchemy table specification.
+        The SQLAlchemy ORM with table specification.
     """
     Base = sqlalchemy.ext.declarative.declarative_base(
         cls=(mongosql.MongoSqlBase,))
@@ -157,5 +157,4 @@ def makeDataTable(
     makeIndexes(columns, tdxSchema)
     # makes a new class Data that inherits from Base that has the attrs
     # given in columns
-    Data = type("Data", (Base,), columns)
-    return Data.__table__
+    return type("Data", (Base,), columns)
