@@ -224,15 +224,41 @@ def convertToSqlite(
 
     return converter[fixed_type](value) # type: ignore
 
+def convertRowToTdx(
+    schema: GeneralSchema,
+    row: t.Mapping[t.Text, SQLVal],
+    data_dir: t.Union[t.Text, os.PathLike] = "",
+) -> t.Mapping[t.Text, JSONified]:
+    """Converts an sqlite row to a tdx row based on the tdx schema.
+
+    Args:
+        unfolded_schema: A Map of Column names to TDX types.
+        row: A map of column to sqlite column value
+        data_dir:
+            The directory to store additional data. Used when saving ndarrays.
+
+    Returns:
+        a map of column to converted TDX values
+    """
+    return {
+        col: convertToTdx(
+            schema[col], # tdx_type
+            val, # the sqlite value
+            data_dir)
+        for col, val in row.items() if col in schema}
+
 def convertToTdx(
     type: GeneralSQLOrStr,
-    value: t.Text
+    value: t.Text,
+    data_dir: t.Union[t.Text, os.PathLike] = "",
 ) -> JSONified:
     """Converts a sqlite value to a tdx value based on a sqlite type.
 
     Args:
         type: SQLite type to convert the value from
         value: SQLite value to convert from
+        data_dir:
+            The directory to store additional data. Used when saving ndarrays.
     
     Returns:
         The converted value.
@@ -248,7 +274,10 @@ def convertToTdx(
         SQLITE_TYPE.TEXT: lambda x: x, # does nothing
         _sqliteconstants.SQLITE_GENERAL_TYPE.ARRAY: json.loads,
         _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT: json.loads,
-        _sqliteconstants.SQLITE_GENERAL_TYPE.NDARRAY: _ndarray.getNDArray,
+        _sqliteconstants.SQLITE_GENERAL_TYPE.NDARRAY:
+            lambda x: _ndarray.getNDArray(
+                _ndarray.NDArray.fromjson(x),
+                data_dir),
     }
 
     return converter[fixed_type](value) # type: ignore

@@ -113,3 +113,7 @@ class NDArray(object):
 
     def tojson(self) -> ty.Text:
         return json.dumps(self.todict())
+
+    @classmethod
+    def fromjson(cls, jsonstr) -> "NDArray":
+        return cls(**json.loads(jsonstr))

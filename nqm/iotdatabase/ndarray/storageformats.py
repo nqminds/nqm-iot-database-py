@@ -88,8 +88,12 @@ class FileStorage(NDArrayStorage):
         # relative_loc is the data folder
         # md.p is either the name of the data, or an absolute path
         path = os.path.join(relative_loc, md.p)
-        return np.memmap( # mode="c" is copy-on-write, changes are made in RAM
-            filename=path, dtype=dtype, mode="c", shape=md.s, order=order)
+        return np.memmap(
+            filename=path,
+            dtype=dtype,
+            mode="c", #  mode="c" is copy-on-write, changes are made in RAM
+            shape=tuple(md.s), # we have to make shape a tuple for numpy
+            order=order)
     @classmethod
     def save(cls, array: np.ndarray, relative_loc="") -> NDArray:
         # make pseudo-random filename

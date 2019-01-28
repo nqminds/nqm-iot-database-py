@@ -6,6 +6,7 @@ import random
 import sqlalchemy.exc
 import os.path
 import numpy as np
+import json
 
 import pytest
 from nqm.iotdatabase.database import Database
@@ -93,6 +94,20 @@ def test_insert_dataset(db, schema):
         with pytest.raises(ValueError):
             db.addData(data)
 
+def row_equal(row1, row2):
+    assert len(row1) == len(row2)
+    for col, val in row1.items():
+        if isinstance(val, np.ndarray):
+            assert np.array_equal(val, row2[col])
+        else:
+            assert val == row2[col]
+
+def convertVal(val):
+    if isinstance(val, list) or isinstance(val, dict):
+        return json.dumps(val)
+    else:
+        return val
+
 @pytest.mark.dependency(depends=["test_insert_dataset"])
 def test_insert_nonunique_error(inmemdb, unique_schema):
     inmemdb.createDatabase(schema=unique_schema)
@@ -104,6 +119,14 @@ def test_insert_nonunique_error(inmemdb, unique_schema):
         inmemdb.addData([data[0]]) # adding invalid same data again
     # check that inserting more data works after an exception
     assert inmemdb.addData([data[number]]) == {"count": 1}
+
+    # check that data is correctly stored
+    if len(unique_schema.get("uniqueIndex", [])) == 1:
+        uniqueIndex = list(unique_schema["uniqueIndex"][0].values())[0]
+        for row in data:
+            query_val = convertVal(row[uniqueIndex])
+            ret = inmemdb.getData({uniqueIndex: query_val}).data[0]
+            row_equal(row, ret)
 
 def make_filedb(filepath):
     return Database(filepath, "file", "w+")
@@ -121,3 +144,8 @@ def test_file_db(tmpdir):
     filedb = make_filedb(os.path.join(tmpdir, "testdb.sqlite"))
     with pytest.raises(sqlalchemy.exc.IntegrityError):
         filedb.addData([data[0]]) # should cause uniqueIndex error
+
+    uniqueIndex = [list(x.values())[0] for x in schema["uniqueIndex"]]
+    for row in data:
+        savedData = filedb.getData(
+            {key: convertVal(row[key]) for key in uniqueIndex}).data

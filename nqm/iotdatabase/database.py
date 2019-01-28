@@ -7,9 +7,11 @@ import typing as t
 import pathlib
 import os
 import tempfile # used for in-memory dbs
+
 import sqlalchemy
 import sqlalchemy.engine
 import sqlalchemy.dialects.postgresql
+import mongosql
 
 import shortuuid
 
@@ -18,10 +20,12 @@ import nqm.iotdatabase._sqliteutils as _sqliteutils
 import nqm.iotdatabase._sqliteinfotable as _sqliteinfotable
 import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
 import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
+from nqm.iotdatabase._datasetdata import DatasetData
 
 DbTypeEnum = _sqliteutils.DbTypeEnum
 TDXSchema = schemaconverter.TDXSchema
 AddDataResult = t.NewType("AddDataResult", dict)
+
 
 class Database(object):
     """An instance of an NQM InterliNQ Database.
@@ -32,6 +36,7 @@ class Database(object):
         general: The SQLite General Schema.
         sqlEngine: The `sqlalchemy` engine used for this connection.
         table: The `sqlalchemy` data table.
+        table_model: The SQLAlchemy ORM (model) of the `sqlalchemy` data table.
         tdx_schema: The `TDXSchema` used by this dataset.
         tdx_data_schema: The `tdx_data_schema` for the data.
         data_dir:
@@ -40,6 +45,7 @@ class Database(object):
     general_schema: schemaconverter.GeneralSchema
     sqlEngine: sqlalchemy.engine.Engine
     table: sqlalchemy.Table = None
+    table_model = None
     tdx_schema: schemaconverter.TDXSchema = TDXSchema(dict())
     tdx_data_schema: schemaconverter.TDXDataSchema = dict()
     data_dir: t.Union[t.Text, os.PathLike] = ""
@@ -147,9 +153,11 @@ class Database(object):
             # TODO Maybe add error (none now matches nqm-iot-database-utils)
             return id
 
-        self.table = alchemyconverter.makeDataTable(
+        self.table_model = alchemyconverter.makeDataModel(
             db, sqlite_schema, tdxSchema)
-        self.table.create(checkfirst=True) # create unless already exists
+        self.table = self.table_model.__table__
+        self.table.create(self.sqlEngine,  checkfirst=True) # create unless already exists
+
         return id
 
     def openDatabase(self,
@@ -267,3 +275,56 @@ class Database(object):
         self.connection.execute(self.table.insert(), sqlData)
 
         return t.cast(AddDataResult, {"count": len(sqlData)})
+
+    def getData(self,
+        filter: t.Mapping[t.Text, t.Any] = {},
+        projection: t.Mapping[t.Text, int] = {},
+        options: t.Mapping[t.Text, t.Any] = {}
+    ) -> DatasetData:
+        """Gets all data from the given dataset that matches the filter.
+
+        Args:
+            filter:
+                A mongodb filter object. If omitted, all data will be retrieved.
+            projection:
+                A mongodb projection object.
+                Should be used to restrict the payload to the minimum
+                properties needed if a lot of data is being retrieved.
+            options:
+                A mongodb options object. Can be used to limit, skip, sort etc.
+
+        Returns:
+            An object containing the data retrieved in the data field.
+
+        Example:
+            >>> from nqm.iotdatabase.database import Database
+            >>> db = Database("", "memory", "w+");
+            >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
+            >>> db.addData([{"a": 1}, {"a": 2}]) == {"count": 2}
+            True
+            >>> datasetData = db.getData(filter={"a": 2})
+            >>> datasetData.data == [{"a": 2}]
+            True
+        """
+        session = sqlalchemy.orm.session.Session(self.sqlEngine)
+        DataModel = self.table_model
+        valid_query_opt = {"limit", "skip", "sort"} # opts to pass to mongosql
+        query_opts = {k: options[k] for k in options if k in valid_query_opt}
+        mongoquery = mongosql.MongoQuery.get_for(
+            DataModel,
+            session.query(DataModel),
+        ).query(
+            filter=filter, project=projection, **query_opts,
+        ).end()
+
+        schema = self.general_schema
+
+        data_dir = self.data_dir
+
+        data = [schemaconverter.convertRowToTdx(
+            schema, row.__dict__, data_dir) for row in mongoquery.all()]
+        if options.get("nqmMeta", False):
+            raise NotImplementedError(
+                "Setting options.nqmMeta to True is not implemented yet.")
+        else:
+            return DatasetData(data=data)
