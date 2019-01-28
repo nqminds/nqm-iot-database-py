@@ -12,6 +12,7 @@ import sqlalchemy
 import sqlalchemy.engine
 import sqlalchemy.dialects.postgresql
 import sqlalchemy.ext.automap
+import mongosql
 
 import shortuuid
 
@@ -20,10 +21,12 @@ import nqm.iotdatabase._sqliteutils as _sqliteutils
 import nqm.iotdatabase._sqliteinfotable as _sqliteinfotable
 import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
 import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
+from nqm.iotdatabase._datasetdata import DatasetData
 
 DbTypeEnum = _sqliteutils.DbTypeEnum
 TDXSchema = schemaconverter.TDXSchema
 AddDataResult = t.NewType("AddDataResult", dict)
+
 
 class Database(object):
     """An instance of an NQM InterliNQ Database.
@@ -275,3 +278,56 @@ class Database(object):
         self.connection.execute(self.table.insert(), sqlData)
 
         return t.cast(AddDataResult, {"count": len(sqlData)})
+
+    def getData(self,
+        filter: t.Mapping[t.Text, t.Any] = {},
+        projection: t.Mapping[t.Text, int] = {},
+        options: t.Mapping[t.Text, t.Any] = {}
+    ) -> DatasetData:
+        """Gets all data from the given dataset that matches the filter.
+
+        Args:
+            filter:
+                A mongodb filter object. If omitted, all data will be retrieved.
+            projection:
+                A mongodb projection object.
+                Should be used to restrict the payload to the minimum
+                properties needed if a lot of data is being retrieved.
+            options:
+                A mongodb options object. Can be used to limit, skip, sort etc.
+
+        Returns:
+            An object containing the data retrieved in the data field.
+
+        Example:
+            >>> from nqm.iotdatabase.database import Database
+            >>> db = Database("", "memory", "w+");
+            >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
+            >>> db.addData([{"a": 1}, {"a": 2}]) == {"count": 2}
+            True
+            >>> datasetData = db.getData(filter={"a": 2})
+            >>> datasetData.data == [{"a": 2}]
+            True
+        """
+        session = sqlalchemy.orm.session.Session(self.sqlEngine)
+        DataModel = self.table_model
+        valid_query_opt = {"limit", "skip", "sort"} # opts to pass to mongosql
+        query_opts = {k: options[k] for k in options if k in valid_query_opt}
+        mongoquery = mongosql.MongoQuery.get_for(
+            DataModel,
+            session.query(DataModel),
+        ).query(
+            filter=filter, project=projection, **query_opts,
+        ).end()
+
+        schema = self.general_schema
+
+        data_dir = self.data_dir
+
+        data = [schemaconverter.convertRowToTdx(
+            schema, row.__dict__, data_dir) for row in mongoquery.all()]
+        if options.get("nqmMeta", False):
+            raise NotImplementedError(
+                "Setting options.nqmMeta to True is not implemented yet.")
+        else:
+            return DatasetData(data=data)
