@@ -7,6 +7,8 @@ import typing as t
 import pathlib
 import os
 import tempfile # used for in-memory dbs
+import collections
+import warnings
 
 import sqlalchemy
 import sqlalchemy.engine
@@ -22,10 +24,13 @@ import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
 import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
 from nqm.iotdatabase._datasetdata import DatasetData
 
+TDX_TYPE = _sqliteconstants.TDX_TYPE
+SQLITE_GENERAL_TYPE = _sqliteconstants.SQLITE_GENERAL_TYPE
+
 DbTypeEnum = _sqliteutils.DbTypeEnum
 TDXSchema = schemaconverter.TDXSchema
 AddDataResult = t.NewType("AddDataResult", dict)
-
+TDXData = t.Iterable[t.Mapping[t.Text, t.Any]]
 
 class Database(object):
     """An instance of an NQM InterliNQ Database.
@@ -235,8 +240,95 @@ class Database(object):
                         schema, db_tdx_schema))
         return is_subset
 
+    def _convertDataToSQLite(self, data: TDXData
+    ) -> t.Iterable[t.Mapping[t.Text, schemaconverter.SQLVal]]:
+        """Converts the given TDX Data to SQLite Data
+
+        Args:
+            data: The list of TDX Data Rows
+        Returns:
+            A list of SQL data rows.
+        """
+        # self.* lookup is slow so do it once only
+        general_schema = self.general_schema
+
+        # convert all the data to SQLite types
+        convertRow = schemaconverter.convertRowToSqlite
+        sqlData = [
+            convertRow(general_schema, r, data_dir=self.data_dir) for r in data]
+        return sqlData
+
+    def _convertFilterToSQLite(self, mongofilter: t.Mapping[t.Text, t.Any]
+    ) -> t.Mapping[t.Text, t.Any]:
+        """Converts the given Mongo Query to a MongoSQLite Query
+
+        Args:
+            mongofilter: A Mongo Style Query
+        Returns:
+            The converted query that can be given to MongoSQL
+        Raises:
+            TypeError
+                If you use mongo query ops (ie '$lt') on an invalid TDX_TYPE
+                or if you query on an invalid type (ndarray).
+        """
+        if any(field[0] == "$" for field in mongofilter):
+            invalid_fields = [f for f in mongofilter if f[0] == "$"]
+            warnings.warn(RuntimeWarning(
+                f"You have a top level mongo query operator {invalid_fields} "
+                "in your filter. This should work, as long as you don't try "
+                "querying any non-sqlite primitive types, ie array/object."))
+            return mongofilter
+
+        if not any(op[0] == "$" for val in mongofilter.values()
+            if isinstance(val, dict) # val might be just a str
+            for op in val
+        ):
+            # check if any column filters have a mongodb query operator
+            # ie $eq, $lte, etc.
+            # if they don't, we can easily convert the given row to sql
+            sql_filter, = self._convertDataToSQLite((mongofilter, ))
+            return sql_filter
+
+        sql_filter = dict()
+        prim_types = {
+            TDX_TYPE.BOOLEAN, TDX_TYPE.DATE, TDX_TYPE.STRING, TDX_TYPE.NUMBER}
+        banned_types = {TDX_TYPE.NDARRAY}
+
+        dataschema: t.Dict[t.Text, TDX_TYPE] = {}
+        for f, v in self.tdx_data_schema.items():
+            if isinstance(v, collections.Mapping):
+                dataschema[f] = TDX_TYPE(
+                    v.get("__tdxType", [TDX_TYPE.OBJECT])[0])
+            elif isinstance(v, collections.Sequence):
+                dataschema[f] =  TDX_TYPE.ARRAY
+
+        for field, val in mongofilter.items():
+            tdx_type = dataschema[field]
+            if tdx_type in prim_types: # no need for conversion
+                sql_filter[field] = val
+                continue
+
+            if tdx_type in banned_types: # cannot query
+                raise TypeError(
+                    f"All queries are banned on tdx_type {tdx_type}. "
+                    "Given item was {field}.")
+
+            if not isinstance(val, dict) or all(op[0] != "$" for op in val):
+                # val is array/or dict with NO mongo query ops
+                # can convert normally
+                con_row, = self._convertDataToSQLite([{field: val}])
+                sql_filter[field] = con_row[field]
+                continue
+
+            raise TypeError(
+                "MongoDB Style Queries are only supported on items "
+                f"with TDX Type values of {prim_types}. Given "
+                "item was {field} with type {tdx_type}. "
+                f"Mongo Op given was {next(op for op in val if op[0] == '$')}")
+        return sql_filter
+
     def addData(self,
-        data: t.Iterable[t.Mapping[t.Text, t.Any]]
+        data: TDXData
     ) -> AddDataResult:
         """Add data to a database resource.
 
@@ -261,13 +353,7 @@ class Database(object):
         Returns:
             The count of data inserted.
         """
-        # self.* lookup is slow so do it once only
-        general_schema = self.general_schema
-        
-        # convert all the data to SQLite types
-        convertRow = schemaconverter.convertRowToSqlite
-        sqlData = [
-            convertRow(general_schema, r, data_dir=self.data_dir) for r in data]
+        sqlData = self._convertDataToSQLite(data)
 
         if self.table is None:
             raise ValueError("self.table has not been initialized yet")
@@ -309,20 +395,46 @@ class Database(object):
         session = sqlalchemy.orm.session.Session(self.sqlEngine)
         DataModel = self.table_model
         valid_query_opt = {"limit", "skip", "sort"} # opts to pass to mongosql
+        #TODO: Add warning/error if invalid option is passed
         query_opts = {k: options[k] for k in options if k in valid_query_opt}
+        sort = query_opts.get("sort", {})
+        if (sort and isinstance(sort, dict)
+            and not isinstance(sort, collections.OrderedDict)
+        ):
+            if len(sort) == 1:
+                # mongosql only accepts OrderedDict for sort
+                # since dict is orderless
+                query_opts["sort"] = collections.OrderedDict(sort)
+            elif len(sort) > 1:
+                raise TypeError("Received Sort Option of type dict with len "
+                    f"{len(sort)}. Python dicts do not have order, therefore "
+                    "please give either a list or OrderedDict as a sort "
+                    "option.")
+
+        # convert dict/array types to JSON
+        mongosql_filter=self._convertFilterToSQLite(filter)
+
         mongoquery = mongosql.MongoQuery.get_for(
             DataModel,
             session.query(DataModel),
         ).query(
-            filter=filter, project=projection, **query_opts,
+            filter=mongosql_filter, project=projection, **query_opts,
         ).end()
 
         schema = self.general_schema
 
         data_dir = self.data_dir
 
+        # TODO: MongoSQL's projection operator doesn't work correctly.
+        # we should fix it instead of using this hack
+        noproject = set([x for x, v in projection.items() if v == 0])
+        projected_data = [
+            {x: a for x, a in row.__dict__.items() if x not in noproject}
+            for row in mongoquery.all()
+        ]
+
         data = [schemaconverter.convertRowToTdx(
-            schema, row.__dict__, data_dir) for row in mongoquery.all()]
+            schema, row, data_dir) for row in projected_data]
         if options.get("nqmMeta", False):
             raise NotImplementedError(
                 "Setting options.nqmMeta to True is not implemented yet.")

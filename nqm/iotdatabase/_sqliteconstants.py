@@ -19,6 +19,8 @@ class TDX_TYPE(ConstEnum):
     REAL = re.compile(r"REAL|FLOA|DOUB")
     DATE = "date"
     NDARRAY = "ndarray"
+    OBJECT = "object"
+    ARRAY = "array"
 
 class SQLITE_TYPE(ConstEnum):
     """Valid sqlite schema types

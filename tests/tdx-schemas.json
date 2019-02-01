@@ -536,7 +536,15 @@
         "__tdxType": [
           "ndarray"
         ]
-      }
+      },
+      "prop4": {
+        "prop4.a": {"__tdxType": [
+            "string"
+          ]
+        },
+        "prop4.b": "magick"
+      },
+      "prop5": ["arraytestthingy"]
     },
     "uniqueIndex": [
       {
@@ -547,12 +555,16 @@
   "sqliteSchema": {
     "prop1": "TEXT",
     "prop2": "NUMERIC",
-    "prop3": "TEXT"
+    "prop3": "TEXT",
+    "prop4": "TEXT",
+    "prop5": "TEXT"
   },
   "generalSchema": {
     "prop1": "NDARRAY",
     "prop2": "NUMERIC",
-    "prop3": "NDARRAY"
+    "prop3": "NDARRAY",
+    "prop4": "OBJECT",
+    "prop5": "ARRAY"
   },
   "sqliteIndex": "CREATE UNIQUE INDEX dataindex ON data(prop2 ASC)"
 }]
