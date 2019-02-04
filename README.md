@@ -11,9 +11,11 @@ Use the below to install as a library using `pip`:
 
 ```bash
 # for SSH:
-# pip3 install pipenv install git+ssh://git@github.com/nqminds/nqm-iot-database-py.git#egg=nqm-iot-database-py
-pip3 install pipenv install git+https://github.com/nqminds/nqm-iot-database-py.git#egg=nqm-iot-database.py
+# pip3 install git+ssh://git@github.com/nqminds/nqm-iot-database-py.git#egg=nqm-iot-database-py
+pip3 install git+https://github.com/nqminds/nqm-iot-database-py.git#egg=nqm-iot-database.py
 ```
+
+You can replace `pip3` with `pipenv` if you prefer.
 
 To download the library, install dependencies for running tests, and build
 documentation, do:
