@@ -6,7 +6,7 @@ import nqm.iotdatabase
 setup(
     name='nqm-iot-database-py',
     version=nqm.iotdatabase.__version__,
-    packages=['nqm.iotdatabase'],
+    packages=['nqm.iotdatabase', 'nqm.iotdatabase.ndarray'],
     author='Alois Klink',
     author_email='alois.klink@gmail.com',
     description="Library for accessing a local nqm-iot-database",
