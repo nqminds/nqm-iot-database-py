@@ -435,6 +435,8 @@ class Database(object):
             {x: a for x, a in row.__dict__.items() if x not in noproject}
             for row in mongoquery.all()
         ]
+        # close the ORM session when done
+        session.close()
 
         data = [schemaconverter.convertRowToTdx(
             schema, row, data_dir) for row in projected_data]
