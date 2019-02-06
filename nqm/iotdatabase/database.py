@@ -54,6 +54,7 @@ class Database(object):
     tdx_schema: schemaconverter.TDXSchema = TDXSchema(dict())
     tdx_data_schema: schemaconverter.TDXDataSchema = dict()
     data_dir: t.Union[t.Text, os.PathLike] = ""
+    session_maker: t.Callable[[], sqlalchemy.orm.session.Session] = None
 
     def __init__(self,
         path: t.Union[t.Text, os.PathLike],
@@ -77,7 +78,7 @@ class Database(object):
         tdx_schema: TDXSchema = TDXSchema(dict())
         if _sqliteinfotable.checkInfoTable(self.sqlEngine):
             info_keys = _sqliteinfotable.getInfoKeys(
-                self.sqlEngine, ["schema"])
+                self.sqlEngine, ["schema"], self.session_maker)
             if info_keys: # lists are False is empty
                 info_keys.setdefault("schema", dict())
                 # dataset schema definition
@@ -135,7 +136,7 @@ class Database(object):
 
         if _sqliteinfotable.checkInfoTable(db):
             # check if old id exists
-            infovals = _sqliteinfotable.getInfoKeys(db, ["id"])
+            infovals = _sqliteinfotable.getInfoKeys(db, ["id"], self.session_maker)
             # use the original id if we can find it
             id = str(infovals.get("id", id))
 
@@ -195,15 +196,15 @@ class Database(object):
         uri = _sqliteutils.sqlAlchemyURL(path_to_db, typeEnum, mode)
         # creates the sqlite3 connection
         self.sqlEngine = sqlalchemy.create_engine(uri)
-        
-        self.connection = self.sqlEngine.connect().execution_options(
-            autocommit=True)
+
+        session_factory = sqlalchemy.orm.sessionmaker(bind=self.sqlEngine)
+        self.session_maker = sqlalchemy.orm.scoped_session(session_factory)
 
         # check to see if this is an already created database
         if _sqliteinfotable.checkInfoTable(self.sqlEngine):
             # check if old id exists
             infovals = _sqliteinfotable.getInfoKeys(
-                self.sqlEngine, ["id", "schema"])
+                self.sqlEngine, ["id", "schema"], self.session_maker)
             # use the original id if we can find it
             id = str(infovals.get("id"))
             schema = infovals.get("schema", None)
@@ -358,7 +359,9 @@ class Database(object):
         if self.table is None:
             raise ValueError("self.table has not been initialized yet")
 
-        self.connection.execute(self.table.insert(), sqlData)
+        connection = self.sqlEngine.connect().execution_options(
+            autocommit=True)
+        connection.execute(self.table.insert(), sqlData)
 
         return t.cast(AddDataResult, {"count": len(sqlData)})
 
@@ -392,7 +395,7 @@ class Database(object):
             >>> datasetData.data == [{"a": 2}]
             True
         """
-        session = sqlalchemy.orm.session.Session(self.sqlEngine)
+        session = self.session_maker()
         DataModel = self.table_model
         valid_query_opt = {"limit", "skip", "sort"} # opts to pass to mongosql
         #TODO: Add warning/error if invalid option is passed

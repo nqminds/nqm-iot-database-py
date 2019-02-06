@@ -42,7 +42,8 @@ def checkInfoTable(db: sqlalchemy.engine.Engine) -> bool:
 
 def getInfoKeys(
     db: sqlalchemy.engine.Engine,
-    keys: typing.Iterable[typing.Text]
+    keys: typing.Iterable[typing.Text],
+    sessionMaker: typing.Callable[[], sqlalchemy.orm.session.Session] = None
 ) -> typing.Dict[typing.Text, schemaconverter.JSONified]:
     """Gets some rows from the info table.
 
@@ -52,13 +53,18 @@ def getInfoKeys(
     Returns:
         A dict of the row keys to the rows
     """
-    session = sqlalchemy.orm.session.Session(db)
+    if not sessionMaker:
+        sessionMaker = sqlalchemy.orm.sessionmaker(bind=db)
+    session = sessionMaker()
+
     query = Info.mongoquery(session.query(Info.key, Info.value)).filter(
         {"key": {"$in": list(keys)}}
     ).end()
-    return {
+    results = {
         key: schemaconverter.convertToTdx(SQLITE_OBJ, str(val)) 
         for key, val in query.all()}
+    session.close()
+    return results
 
 def setInfoKeys(
     db: sqlalchemy.engine.Engine,
