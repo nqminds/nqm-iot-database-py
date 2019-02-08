@@ -22,7 +22,7 @@ import nqm.iotdatabase._sqliteutils as _sqliteutils
 import nqm.iotdatabase._sqliteinfotable as _sqliteinfotable
 import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
 import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
-from nqm.iotdatabase._datasetdata import DatasetData
+from nqm.iotdatabase._datasetdata import DatasetData, DatasetCount
 
 TDX_TYPE = _sqliteconstants.TDX_TYPE
 SQLITE_GENERAL_TYPE = _sqliteconstants.SQLITE_GENERAL_TYPE
@@ -385,6 +385,10 @@ class Database(object):
         Returns:
             An object containing the data retrieved in the data field.
 
+        Raises:
+            ValueError: If an invalid option is given.
+            TypeError: If the sort option is a dict, not an OrderedDict.
+
         Example:
             >>> from nqm.iotdatabase.database import Database
             >>> db = Database("", "memory", "w+");
@@ -398,8 +402,13 @@ class Database(object):
         session = self.session_maker()
         DataModel = self.table_model
         valid_query_opt = {"limit", "skip", "sort"} # opts to pass to mongosql
-        #TODO: Add warning/error if invalid option is passed
         query_opts = {k: options[k] for k in options if k in valid_query_opt}
+        # raise Error if invalid options are given
+        if any(key not in valid_query_opt for key in options):
+            raise ValueError("Invalid option in options param. "
+                f"'{next(k for k in options if k not in valid_query_opt)}' "
+                f"is not a valid option. Valid options are {valid_query_opt}."
+            )
         sort = query_opts.get("sort", {})
         if (sort and isinstance(sort, dict)
             and not isinstance(sort, collections.OrderedDict)
@@ -445,3 +454,87 @@ class Database(object):
                 "Setting options.nqmMeta to True is not implemented yet.")
         else:
             return DatasetData(data=data)
+
+    def getAggregateData(self, pipeline: t.Mapping[t.Text, t.Any],
+        filter: t.Mapping[t.Text, t.Any] = {},
+    ) -> DatasetData:
+        """Performs an aggregate query on the given dataset resource.
+
+        Please note that as MongoSQL is used, some queries may not work.
+
+        Args:
+            pipeline: The aggregate pipeline, as defined in
+                [the mongodb docs](https://docs.mongodb.com/manual/core/aggregation-pipeline/).
+                Can be given as a JSON object or as a stringified JSON object.
+            filter: A mongodb filter object.
+                If omitted, all data will have the aggregation run on them.
+
+        Returns:
+            The data made from the aggregrate query.
+            This will have only one row of data, and will be in SQL types.
+
+        Example:
+            >>> from nqm.iotdatabase.database import Database
+            >>> db = Database("", "memory", "w+");
+            >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
+            >>> db.addData({"a": x} for x in range(3)) == {"count": 3}
+            True
+            >>> datasetData = db.getAggregateData(
+            ...     pipeline={"answer": {"$sum": "a"}},
+            ...     filter={"a": {"$lte": 2}})
+            >>> datasetData.data == [
+            ...     {"answer": sum(a for a in range(3) if a <= 2)}] # 1 + 2
+            True
+        """
+        session = self.session_maker()
+        DataModel = self.table_model
+
+        mongoquery = mongosql.MongoQuery.get_for(
+            DataModel,
+            session.query(DataModel),
+        ).query(
+            filter=filter,
+            aggregate=pipeline,
+        ).end()
+
+        schema = self.general_schema
+        data_dir = self.data_dir
+
+        data = [row._asdict() for row in mongoquery.all()]
+
+        # close the ORM session when done
+        session.close()
+
+        return DatasetData(data=data)
+
+    def getDataCount(self, filter: t.Mapping[t.Text, t.Any] = {}
+    ) -> DatasetCount:
+        """Gets a count of the data that matches the filter.
+
+        Essentially just wraps
+        :func:`~nqm.iotdatabase.database.Database.getAggregateData` with args
+        ``pipeline={"count": {"$sum": 1}}``.
+
+        Args:
+            filter:
+                An optional mongodb filter to apply before counting the data.
+
+        Returns:
+            The metadata and count in the count field.
+
+        Example:
+            >>> from nqm.iotdatabase.database import Database
+            >>> db = Database("", "memory", "w+");
+            >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
+            >>> db.addData({"a": x} for x in range(3)) == {"count": 3}
+            True
+            >>> datasetCount = db.getDataCount({"a": {"$lte": 2}})
+            >>> datasetCount.count == sum(1 for a in range(3) if a <= 2)
+            True
+        """
+        aggData = self.getAggregateData(
+            pipeline={"count": {"$sum": 1}},
+            filter=filter
+        )
+        count = aggData.data[0]["count"]
+        return DatasetCount(count=count)
