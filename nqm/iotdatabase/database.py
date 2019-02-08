@@ -385,6 +385,10 @@ class Database(object):
         Returns:
             An object containing the data retrieved in the data field.
 
+        Raises:
+            ValueError: If an invalid option is given.
+            TypeError: If the sort option is a dict, not an OrderedDict.
+
         Example:
             >>> from nqm.iotdatabase.database import Database
             >>> db = Database("", "memory", "w+");
@@ -398,8 +402,13 @@ class Database(object):
         session = self.session_maker()
         DataModel = self.table_model
         valid_query_opt = {"limit", "skip", "sort"} # opts to pass to mongosql
-        #TODO: Add warning/error if invalid option is passed
         query_opts = {k: options[k] for k in options if k in valid_query_opt}
+        # raise Error if invalid options are given
+        if any(key not in valid_query_opt for key in options):
+            raise ValueError("Invalid option in options param. "
+                f"'{next(k for k in options if k not in valid_query_opt)}' "
+                f"is not a valid option. Valid options are {valid_query_opt}."
+            )
         sort = query_opts.get("sort", {})
         if (sort and isinstance(sort, dict)
             and not isinstance(sort, collections.OrderedDict)

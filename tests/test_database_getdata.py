@@ -57,6 +57,11 @@ def test_getsorteddata(dataDb, row_equal):
         for i in range(len(sortedData)):
             row_equal(sortedData[i], sortedSavedData[i])
 
+def test_invalidoption(dataDb):
+    db, data, key = dataDb
+    with pytest.raises(ValueError, match=r"Invalid option in options param.*"):
+        db.getData(options={"hello_world": 1}).data
+
 a = 89; b = 12; c = [a, b, 50]
 @pytest.fixture(params=(
         (lambda x: x == a, {"$eq": a}),
