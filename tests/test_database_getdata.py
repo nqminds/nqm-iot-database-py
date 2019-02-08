@@ -77,6 +77,7 @@ a = 89; b = 12; c = [a, b, 50]
 def filterfunc_mongofilter(request):
     return request.param
 
+@pytest.mark.dependency()
 def test_getqueryopts(dataDb, row_equal, filterfunc_mongofilter):
     db, data, key = dataDb
     sortedData = sorted(data, key=lambda row: row[key])
@@ -157,3 +158,33 @@ def test_getdata_projection(dataDb):
 
         projectedSet = set(x for x,v in projection.items() if v == 1)
         assert projectedSet == set(projectedData[0].keys())
+
+@pytest.fixture(params=(
+    (max, lambda x: {"$max": x}),
+    (min, lambda x: {"$min": x}),
+    (lambda x: sum(x)/len(x), lambda x: {"$avg": x}),
+    (sum, lambda x: {"$sum": x}),
+    (len, lambda x: {"$sum": 1}),
+))
+def aggfunc_mongopipe(request):
+    return request.param
+
+@pytest.mark.dependency(depends=["test_getqueryopts"])
+def test_getaggregatedata(dataDb, filterfunc_mongofilter, aggfunc_mongopipe):
+    db, data, key = dataDb
+    filterfunc, mongofilter = filterfunc_mongofilter
+    aggfunc, mongopipe = aggfunc_mongopipe
+
+    result_key = "result"
+    pipeline = {result_key: mongopipe(key)}
+
+    aggregateResult = db.getAggregateData(
+        filter={key: mongofilter},
+        pipeline=pipeline)
+
+    actualAgg = aggregateResult.data[0]
+    print(data[0])
+    filteredData = [r[key] for r in data if filterfunc(r[key])]
+    expectedAgg = {result_key: aggfunc(filteredData)}
+
+    assert expectedAgg == actualAgg

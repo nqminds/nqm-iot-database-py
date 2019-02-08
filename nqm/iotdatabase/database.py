@@ -454,3 +454,55 @@ class Database(object):
                 "Setting options.nqmMeta to True is not implemented yet.")
         else:
             return DatasetData(data=data)
+
+    def getAggregateData(self, pipeline: t.Mapping[t.Text, t.Any],
+        filter: t.Mapping[t.Text, t.Any] = {},
+    ) -> DatasetData:
+        """Performs an aggregate query on the given dataset resource.
+
+        Please note that as MongoSQL is used, some queries may not work.
+
+        Args:
+            pipeline: The aggregate pipeline, as defined in
+                [the mongodb docs](https://docs.mongodb.com/manual/core/aggregation-pipeline/).
+                Can be given as a JSON object or as a stringified JSON object.
+            filter: A mongodb filter object.
+                If omitted, all data will have the aggregation run on them.
+
+        Returns:
+            The data made from the aggregrate query.
+            This will have only one row of data, and will be in SQL types.
+
+        Example:
+            >>> from nqm.iotdatabase.database import Database
+            >>> db = Database("", "memory", "w+");
+            >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
+            >>> db.addData({"a": x} for x in range(3)) == {"count": 3}
+            True
+            >>> datasetData = db.getAggregateData(
+            ...     pipeline={"answer": {"$sum": "a"}},
+            ...     filter={"a": {"$lte": 2}})
+            >>> datasetData.data == [
+            ...     {"answer": sum(a for a in range(3) if a <= 2)}] # 1 + 2
+            True
+        """
+        session = self.session_maker()
+        DataModel = self.table_model
+
+        mongoquery = mongosql.MongoQuery.get_for(
+            DataModel,
+            session.query(DataModel),
+        ).query(
+            filter=filter,
+            aggregate=pipeline,
+        ).end()
+
+        schema = self.general_schema
+        data_dir = self.data_dir
+
+        data = [row._asdict() for row in mongoquery.all()]
+
+        # close the ORM session when done
+        session.close()
+
+        return DatasetData(data=data)
