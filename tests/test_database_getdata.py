@@ -190,3 +190,18 @@ def test_getaggregatedata(dataDb, filterfunc_mongofilter, aggfunc_mongopipe):
     expectedAgg = {result_key: aggfunc(filteredData)}
 
     assert expectedAgg == actualAgg
+
+@pytest.mark.dependency(depends=["test_getqueryopts"])
+def test_getdatacount(dataDb, filterfunc_mongofilter):
+    db, data, key = dataDb
+    filterfunc, mongofilter = filterfunc_mongofilter
+
+    aggregateResult = db.getDataCount(
+        filter={key: mongofilter}
+    )
+
+    count = aggregateResult.count
+
+    expectedCount = sum(1 for r in data if filterfunc(r[key]))
+
+    assert count == expectedCount

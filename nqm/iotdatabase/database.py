@@ -22,7 +22,7 @@ import nqm.iotdatabase._sqliteutils as _sqliteutils
 import nqm.iotdatabase._sqliteinfotable as _sqliteinfotable
 import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
 import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
-from nqm.iotdatabase._datasetdata import DatasetData
+from nqm.iotdatabase._datasetdata import DatasetData, DatasetCount
 
 TDX_TYPE = _sqliteconstants.TDX_TYPE
 SQLITE_GENERAL_TYPE = _sqliteconstants.SQLITE_GENERAL_TYPE
@@ -506,3 +506,35 @@ class Database(object):
         session.close()
 
         return DatasetData(data=data)
+
+    def getDataCount(self, filter: t.Mapping[t.Text, t.Any] = {}
+    ) -> DatasetCount:
+        """Gets a count of the data that matches the filter.
+
+        Essentially just wraps
+        :func:`~nqm.iotdatabase.database.Database.getAggregateData` with args
+        ``pipeline={"count": {"$sum": 1}}``.
+
+        Args:
+            filter:
+                An optional mongodb filter to apply before counting the data.
+
+        Returns:
+            The metadata and count in the count field.
+
+        Example:
+            >>> from nqm.iotdatabase.database import Database
+            >>> db = Database("", "memory", "w+");
+            >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
+            >>> db.addData({"a": x} for x in range(3)) == {"count": 3}
+            True
+            >>> datasetCount = db.getDataCount({"a": {"$lte": 2}})
+            >>> datasetCount.count == sum(1 for a in range(3) if a <= 2)
+            True
+        """
+        aggData = self.getAggregateData(
+            pipeline={"count": {"$sum": 1}},
+            filter=filter
+        )
+        count = aggData.data[0]["count"]
+        return DatasetCount(count=count)
