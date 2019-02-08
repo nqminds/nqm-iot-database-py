@@ -92,6 +92,7 @@ def test_getqueryopts(dataDb, row_equal, filterfunc_mongofilter):
     ):
         row_equal(row, getDataRow)
 
+@pytest.mark.dependency(depends=["test_getqueryopts"])
 def test_getqueryopts_skip(dataDb, row_equal, filterfunc_mongofilter):
     db, data, key = dataDb
     sortedData = sorted(data, key=lambda row: row[key])
@@ -112,6 +113,7 @@ def test_getqueryopts_skip(dataDb, row_equal, filterfunc_mongofilter):
         ):
             row_equal(row, getDataRow)
 
+@pytest.mark.dependency(depends=["test_getqueryopts"])
 def test_getlogicalquery(dataDb, row_equal):
     db, data, key = dataDb
     sortedData = sorted(data, key=lambda row: row[key])
