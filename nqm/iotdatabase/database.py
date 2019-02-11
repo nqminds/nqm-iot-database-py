@@ -539,3 +539,8 @@ class Database(object):
         )
         count = aggData.data[0]["count"]
         return DatasetCount(count=count)
+
+    def getResource(self) -> t.Dict[t.Text, t.Any]:
+        """Gets the details/metadata for this dataset"""
+        return _sqliteinfotable.getInfoKeys(
+            self.sqlEngine, [], self.session_maker)

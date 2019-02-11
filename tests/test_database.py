@@ -15,6 +15,25 @@ def json_dbinfo(jsonfilepath="tdx-schemas.json"):
     with pathlib.Path(__file__).with_name(jsonfilepath).open() as jsonfile:
         return json.load(jsonfile)
 
+def test_getResource():
+    for info in json_dbinfo():
+        inmemdb = Database("", "memory", "w+")
+        inmemdb.createDatabase(**info)
+
+        saved_info = inmemdb.getResource()
+
+        # every getResource() needs metadata
+        assert "schemaDefinition" in saved_info
+
+        for key in info.keys():
+            if key == "schema":
+                # I don't know why it is like this, but this is how the TDX
+                # works?
+                assert saved_info["schemaDefinition"] == info[key]
+            else:
+                # check everything in info is saved in the infotable.
+                assert saved_info[key] == info[key]
+
 def schemas():
     return itertools.chain(
         [x["schema"] for x in json_dbinfo()],
