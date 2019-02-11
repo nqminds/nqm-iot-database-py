@@ -22,10 +22,11 @@ import nqm.iotdatabase._sqliteutils as _sqliteutils
 import nqm.iotdatabase._sqliteinfotable as _sqliteinfotable
 import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
 import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
-from nqm.iotdatabase._datasetdata import DatasetData, DatasetCount
+from nqm.iotdatabase._datasetdata import DatasetData, DatasetCount, MetaData
 
 TDX_TYPE = _sqliteconstants.TDX_TYPE
 SQLITE_GENERAL_TYPE = _sqliteconstants.SQLITE_GENERAL_TYPE
+SCHEMA_KEY = str(_sqliteconstants.SCHEMA_KEY)
 
 DbTypeEnum = _sqliteutils.DbTypeEnum
 TDXSchema = schemaconverter.TDXSchema
@@ -38,7 +39,7 @@ class Database(object):
     Uses SQLite as a backend, but allows for TDX-style commands.
 
     Attributes:
-        general: The SQLite General Schema.
+        general_schema: The SQLite General Schema.
         sqlEngine: The `sqlalchemy` engine used for this connection.
         table: The `sqlalchemy` data table.
         table_model: The SQLAlchemy ORM (model) of the `sqlalchemy` data table.
@@ -46,6 +47,9 @@ class Database(object):
         tdx_data_schema: The `tdx_data_schema` for the data.
         data_dir:
             The location of the data directory (for saving ndarrays to file)
+        session_maker:
+            Used to create an :class:`sqlalchemy.orm.session.Session` for
+            querying data.
     """
     general_schema: schemaconverter.GeneralSchema
     sqlEngine: sqlalchemy.engine.Engine
@@ -78,11 +82,11 @@ class Database(object):
         tdx_schema: TDXSchema = TDXSchema(dict())
         if _sqliteinfotable.checkInfoTable(self.sqlEngine):
             info_keys = _sqliteinfotable.getInfoKeys(
-                self.sqlEngine, ["schema"], self.session_maker)
+                self.sqlEngine, [SCHEMA_KEY], self.session_maker)
             if info_keys: # lists are False is empty
-                info_keys.setdefault("schema", dict())
+                info_keys.setdefault(SCHEMA_KEY, dict())
                 # dataset schema definition
-                tdx_schema = info_keys["schema"]
+                tdx_schema = info_keys[SCHEMA_KEY]
                 # dataset data schema
                 tdx_schema.setdefault("dataSchema", dict())
         self.tdx_schema = tdx_schema
@@ -146,7 +150,7 @@ class Database(object):
             # create infotable
             _sqliteinfotable.createInfoTable(db)
             info = kargs
-            info["schema"] = tdxSchema
+            info[SCHEMA_KEY] = tdxSchema
             info["id"] = id
             
             _sqliteinfotable.setInfoKeys(db, info)
@@ -204,10 +208,10 @@ class Database(object):
         if _sqliteinfotable.checkInfoTable(self.sqlEngine):
             # check if old id exists
             infovals = _sqliteinfotable.getInfoKeys(
-                self.sqlEngine, ["id", "schema"], self.session_maker)
+                self.sqlEngine, ["id", SCHEMA_KEY], self.session_maker)
             # use the original id if we can find it
             id = str(infovals.get("id"))
-            schema = infovals.get("schema", None)
+            schema = infovals.get(SCHEMA_KEY, None)
             self.createDatabase(id=id, schema=schema)
 
         return self
@@ -335,7 +339,7 @@ class Database(object):
 
         Example:
             >>> from nqm.iotdatabase.database import Database
-            >>> db = Database("", "memory", "w+");
+            >>> db = Database("", "memory", "w+")
             >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
             >>> db.addData([{"a": 1}, {"a": 2}]) == {"count": 2}
             True
@@ -391,7 +395,7 @@ class Database(object):
 
         Example:
             >>> from nqm.iotdatabase.database import Database
-            >>> db = Database("", "memory", "w+");
+            >>> db = Database("", "memory", "w+")
             >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
             >>> db.addData([{"a": 1}, {"a": 2}]) == {"count": 2}
             True
@@ -475,7 +479,7 @@ class Database(object):
 
         Example:
             >>> from nqm.iotdatabase.database import Database
-            >>> db = Database("", "memory", "w+");
+            >>> db = Database("", "memory", "w+")
             >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
             >>> db.addData({"a": x} for x in range(3)) == {"count": 3}
             True
@@ -524,7 +528,7 @@ class Database(object):
 
         Example:
             >>> from nqm.iotdatabase.database import Database
-            >>> db = Database("", "memory", "w+");
+            >>> db = Database("", "memory", "w+")
             >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
             >>> db.addData({"a": x} for x in range(3)) == {"count": 3}
             True
@@ -538,3 +542,28 @@ class Database(object):
         )
         count = aggData.data[0]["count"]
         return DatasetCount(count=count)
+
+    def getResource(self) -> MetaData:
+        """Gets the details/metadata for this dataset
+
+        Returns:
+            The metadata of this dataset.
+
+        Example
+            >>> from nqm.iotdatabase.database import Database
+            >>> db = Database("", "memory", "w+")
+            >>> metadata = {
+            ...     "schema": {"dataSchema": {"a": []}}, "name": "Hi World"}
+            >>> id = db.createDatabase(**metadata)
+            >>> loaded_md = db.getResource()
+            >>> # loaded_md's schemaDefintion creates an empty uniqueIndex
+            >>> "uniqueIndex" in loaded_md["schemaDefinition"]
+            True
+            >>> loaded_md["schemaDefinition"]["dataSchema"] == {"a": []}
+            True
+            >>> # can use both md["x"] format or JavaScript like md.x format
+            >>> print(loaded_md.name)
+            Hi World
+        """
+        return MetaData(_sqliteinfotable.getInfoKeys(
+            self.sqlEngine, [], self.session_maker))

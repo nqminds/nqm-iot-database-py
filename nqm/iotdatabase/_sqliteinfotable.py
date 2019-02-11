@@ -49,7 +49,10 @@ def getInfoKeys(
 
     Args:
         db: The sqlite3 db Engine from sqlalchemy
-        keys: A list of the primary keys of the row you want to get
+        keys: A list of the primary keys of the row you want to get.
+            If this is false-y (ie empty), return all rows.
+        sessionMaker: Function to that returns an sqlalchemy Session to use
+            for querying data.
     Returns:
         A dict of the row keys to the rows
     """
@@ -57,12 +60,18 @@ def getInfoKeys(
         sessionMaker = sqlalchemy.orm.sessionmaker(bind=db)
     session = sessionMaker()
 
-    query = Info.mongoquery(session.query(Info.key, Info.value)).filter(
-        {"key": {"$in": list(keys)}}
-    ).end()
+    if keys:
+        filterquery = {"key": {"$in": list(keys)}}
+    else:
+        filterquery = {} # get all keys
+
+    query = Info.mongoquery(session.query(Info.key, Info.value)
+        ).filter(filterquery).end()
+
     results = {
         key: schemaconverter.convertToTdx(SQLITE_OBJ, str(val)) 
         for key, val in query.all()}
+
     session.close()
     return results
 
