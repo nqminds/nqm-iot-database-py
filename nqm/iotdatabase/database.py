@@ -39,7 +39,7 @@ class Database(object):
     Uses SQLite as a backend, but allows for TDX-style commands.
 
     Attributes:
-        general: The SQLite General Schema.
+        general_schema: The SQLite General Schema.
         sqlEngine: The `sqlalchemy` engine used for this connection.
         table: The `sqlalchemy` data table.
         table_model: The SQLAlchemy ORM (model) of the `sqlalchemy` data table.
@@ -47,6 +47,9 @@ class Database(object):
         tdx_data_schema: The `tdx_data_schema` for the data.
         data_dir:
             The location of the data directory (for saving ndarrays to file)
+        session_maker:
+            Used to create an :class:`sqlalchemy.orm.session.Session` for
+            querying data.
     """
     general_schema: schemaconverter.GeneralSchema
     sqlEngine: sqlalchemy.engine.Engine

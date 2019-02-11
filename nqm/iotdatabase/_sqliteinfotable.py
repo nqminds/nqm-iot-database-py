@@ -51,6 +51,8 @@ def getInfoKeys(
         db: The sqlite3 db Engine from sqlalchemy
         keys: A list of the primary keys of the row you want to get.
             If this is false-y (ie empty), return all rows.
+        sessionMaker: Function to that returns an sqlalchemy Session to use
+            for querying data.
     Returns:
         A dict of the row keys to the rows
     """
