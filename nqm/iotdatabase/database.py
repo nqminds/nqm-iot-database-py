@@ -339,7 +339,7 @@ class Database(object):
 
         Example:
             >>> from nqm.iotdatabase.database import Database
-            >>> db = Database("", "memory", "w+");
+            >>> db = Database("", "memory", "w+")
             >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
             >>> db.addData([{"a": 1}, {"a": 2}]) == {"count": 2}
             True
@@ -395,7 +395,7 @@ class Database(object):
 
         Example:
             >>> from nqm.iotdatabase.database import Database
-            >>> db = Database("", "memory", "w+");
+            >>> db = Database("", "memory", "w+")
             >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
             >>> db.addData([{"a": 1}, {"a": 2}]) == {"count": 2}
             True
@@ -479,7 +479,7 @@ class Database(object):
 
         Example:
             >>> from nqm.iotdatabase.database import Database
-            >>> db = Database("", "memory", "w+");
+            >>> db = Database("", "memory", "w+")
             >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
             >>> db.addData({"a": x} for x in range(3)) == {"count": 3}
             True
@@ -528,7 +528,7 @@ class Database(object):
 
         Example:
             >>> from nqm.iotdatabase.database import Database
-            >>> db = Database("", "memory", "w+");
+            >>> db = Database("", "memory", "w+")
             >>> id = db.createDatabase(schema={"dataSchema": {"a": []}})
             >>> db.addData({"a": x} for x in range(3)) == {"count": 3}
             True
@@ -544,6 +544,26 @@ class Database(object):
         return DatasetCount(count=count)
 
     def getResource(self) -> MetaData:
-        """Gets the details/metadata for this dataset"""
+        """Gets the details/metadata for this dataset
+
+        Returns:
+            The metadata of this dataset.
+
+        Example
+            >>> from nqm.iotdatabase.database import Database
+            >>> db = Database("", "memory", "w+")
+            >>> metadata = {
+            ...     "schema": {"dataSchema": {"a": []}}, "name": "Hi World"}
+            >>> id = db.createDatabase(**metadata)
+            >>> loaded_md = db.getResource()
+            >>> # loaded_md's schemaDefintion creates an empty uniqueIndex
+            >>> "uniqueIndex" in loaded_md["schemaDefinition"]
+            True
+            >>> loaded_md["schemaDefinition"]["dataSchema"] == {"a": []}
+            True
+            >>> # can use both md["x"] format or JavaScript like md.x format
+            >>> print(loaded_md.name)
+            Hi World
+        """
         return MetaData(_sqliteinfotable.getInfoKeys(
             self.sqlEngine, [], self.session_maker))
