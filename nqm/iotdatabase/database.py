@@ -22,7 +22,7 @@ import nqm.iotdatabase._sqliteutils as _sqliteutils
 import nqm.iotdatabase._sqliteinfotable as _sqliteinfotable
 import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
 import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
-from nqm.iotdatabase._datasetdata import DatasetData, DatasetCount
+from nqm.iotdatabase._datasetdata import DatasetData, DatasetCount, MetaData
 
 TDX_TYPE = _sqliteconstants.TDX_TYPE
 SQLITE_GENERAL_TYPE = _sqliteconstants.SQLITE_GENERAL_TYPE
@@ -540,7 +540,7 @@ class Database(object):
         count = aggData.data[0]["count"]
         return DatasetCount(count=count)
 
-    def getResource(self) -> t.Dict[t.Text, t.Any]:
+    def getResource(self) -> MetaData:
         """Gets the details/metadata for this dataset"""
-        return _sqliteinfotable.getInfoKeys(
-            self.sqlEngine, [], self.session_maker)
+        return MetaData(_sqliteinfotable.getInfoKeys(
+            self.sqlEngine, [], self.session_maker))
