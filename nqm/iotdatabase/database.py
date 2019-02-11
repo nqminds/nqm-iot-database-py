@@ -26,6 +26,7 @@ from nqm.iotdatabase._datasetdata import DatasetData, DatasetCount
 
 TDX_TYPE = _sqliteconstants.TDX_TYPE
 SQLITE_GENERAL_TYPE = _sqliteconstants.SQLITE_GENERAL_TYPE
+SCHEMA_KEY = str(_sqliteconstants.SCHEMA_KEY)
 
 DbTypeEnum = _sqliteutils.DbTypeEnum
 TDXSchema = schemaconverter.TDXSchema
@@ -78,11 +79,11 @@ class Database(object):
         tdx_schema: TDXSchema = TDXSchema(dict())
         if _sqliteinfotable.checkInfoTable(self.sqlEngine):
             info_keys = _sqliteinfotable.getInfoKeys(
-                self.sqlEngine, ["schema"], self.session_maker)
+                self.sqlEngine, [SCHEMA_KEY], self.session_maker)
             if info_keys: # lists are False is empty
-                info_keys.setdefault("schema", dict())
+                info_keys.setdefault(SCHEMA_KEY, dict())
                 # dataset schema definition
-                tdx_schema = info_keys["schema"]
+                tdx_schema = info_keys[SCHEMA_KEY]
                 # dataset data schema
                 tdx_schema.setdefault("dataSchema", dict())
         self.tdx_schema = tdx_schema
@@ -146,7 +147,7 @@ class Database(object):
             # create infotable
             _sqliteinfotable.createInfoTable(db)
             info = kargs
-            info["schema"] = tdxSchema
+            info[SCHEMA_KEY] = tdxSchema
             info["id"] = id
             
             _sqliteinfotable.setInfoKeys(db, info)
@@ -204,10 +205,10 @@ class Database(object):
         if _sqliteinfotable.checkInfoTable(self.sqlEngine):
             # check if old id exists
             infovals = _sqliteinfotable.getInfoKeys(
-                self.sqlEngine, ["id", "schema"], self.session_maker)
+                self.sqlEngine, ["id", SCHEMA_KEY], self.session_maker)
             # use the original id if we can find it
             id = str(infovals.get("id"))
-            schema = infovals.get("schema", None)
+            schema = infovals.get(SCHEMA_KEY, None)
             self.createDatabase(id=id, schema=schema)
 
         return self

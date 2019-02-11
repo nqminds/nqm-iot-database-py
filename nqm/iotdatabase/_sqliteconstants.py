@@ -63,6 +63,7 @@ class SQLITE(ConstEnum):
 class DATABASE(ConstEnum):
     """Stores database constants"""
     INFO_TABLE_NAME = "info"
+    SCHEMA_KEY = "schemaDefinition" # the metadata key to store the schema def
     DATA_TABLE_NAME = "data"
     DATA_FOLDER_SUFFIX = ".d"
     TABLE_INDEX_NAME = "dataindex"
@@ -71,3 +72,4 @@ class DATABASE(ConstEnum):
 DATABASE_INFO_TABLE_NAME = DATABASE.INFO_TABLE_NAME
 DATABASE_DATA_TABLE_NAME = DATABASE.DATA_TABLE_NAME
 DATABASE_TABLE_INDEX_NAME = DATABASE.TABLE_INDEX_NAME
+SCHEMA_KEY = DATABASE.SCHEMA_KEY
