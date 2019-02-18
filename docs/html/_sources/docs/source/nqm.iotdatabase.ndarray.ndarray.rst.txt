@@ -1,0 +1,7 @@
+nqm.iotdatabase.ndarray.ndarray module
+======================================
+
+.. automodule:: nqm.iotdatabase.ndarray.ndarray
+    :members:
+    :undoc-members:
+    :show-inheritance:

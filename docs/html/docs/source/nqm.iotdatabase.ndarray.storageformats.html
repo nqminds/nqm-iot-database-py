@@ -1,0 +1,451 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>nqm.iotdatabase.ndarray.storageformats module &#8212; nqm-iot-database-utils-python  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="nqm.iotdatabase.database module" href="nqm.iotdatabase.database.html" />
+    <link rel="prev" title="nqm.iotdatabase.ndarray.ndarray module" href="nqm.iotdatabase.ndarray.ndarray.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-nqm.iotdatabase.ndarray.storageformats">
+<span id="nqm-iotdatabase-ndarray-storageformats-module"></span><h1>nqm.iotdatabase.ndarray.storageformats module<a class="headerlink" href="#module-nqm.iotdatabase.ndarray.storageformats" title="Permalink to this headline">¶</a></h1>
+<p>Contains different methods of storing an ndarray in a NDArray.</p>
+<p>For example:</p>
+<ul class="simple">
+<li>“f” means that “p” is a pointer to a uncompressed binary matrix.</li>
+<li>“B” means that “p” is a base64 string of an uncompressed binary matrix.</li>
+<li>“G” means that “G” is a base64 string of a gzipped binary matrix.</li>
+</ul>
+<dl class="class">
+<dt id="nqm.iotdatabase.ndarray.storageformats.Base64Storage">
+<em class="property">class </em><code class="descclassname">nqm.iotdatabase.ndarray.storageformats.</code><code class="descname">Base64Storage</code><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#Base64Storage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.Base64Storage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#nqm.iotdatabase.ndarray.storageformats.NDArrayStorage" title="nqm.iotdatabase.ndarray.storageformats.NDArrayStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">nqm.iotdatabase.ndarray.storageformats.NDArrayStorage</span></code></a></p>
+<p>Stores the ndarray as a raw base64 string</p>
+<dl class="attribute">
+<dt id="nqm.iotdatabase.ndarray.storageformats.Base64Storage.code">
+<code class="descname">code</code><em class="property"> = 'B'</em><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.Base64Storage.code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="nqm.iotdatabase.ndarray.storageformats.Base64Storage.delete">
+<em class="property">classmethod </em><code class="descname">delete</code><span class="sig-paren">(</span><em>metadata</em>, <em>relative_loc=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#Base64Storage.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.Base64Storage.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes the numpy array from the given NDArray.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>metadata</strong> (<a class="reference internal" href="nqm.iotdatabase.ndarray.ndarray.html#nqm.iotdatabase.ndarray.ndarray.NDArray" title="nqm.iotdatabase.ndarray.ndarray.NDArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">NDArray</span></code></a>) – The NDArray telling you here the np.ndarray is stored.</li>
+<li><strong>relative_loc</strong> – If NDArray contains a relative filepath,
+it is relative to this absolute path.</li>
+<li><strong>**kwargs</strong> – Other arguments.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="nqm.iotdatabase.ndarray.storageformats.Base64Storage.get">
+<em class="property">classmethod </em><code class="descname">get</code><span class="sig-paren">(</span><em>metadata</em>, <em>relative_loc=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#Base64Storage.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.Base64Storage.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the numpy array from the given NDArray.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>metadata</strong> (<a class="reference internal" href="nqm.iotdatabase.ndarray.ndarray.html#nqm.iotdatabase.ndarray.ndarray.NDArray" title="nqm.iotdatabase.ndarray.ndarray.NDArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">NDArray</span></code></a>) – The NDArray telling you here the np.ndarray is stored.</li>
+<li><strong>relative_loc</strong> – If NDArray contains a relative filepath,
+it is relative to this absolute path.</li>
+<li><strong>**kwargs</strong> – Other arguments.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The loaded numpy array.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="nqm.iotdatabase.ndarray.storageformats.Base64Storage.save">
+<em class="property">classmethod </em><code class="descname">save</code><span class="sig-paren">(</span><em>array</em>, <em>relative_loc=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#Base64Storage.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.Base64Storage.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the numpy array and returns an NDArray.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>) – The array to store.</li>
+<li><strong>relative_loc</strong> – If NDArray contains a relative filepath,
+it is relative to this absolute path.</li>
+<li><strong>**kwargs</strong> – Other arguments.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference internal" href="nqm.iotdatabase.ndarray.ndarray.html#nqm.iotdatabase.ndarray.ndarray.NDArray" title="nqm.iotdatabase.ndarray.ndarray.NDArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">NDArray</span></code></a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The metadata explaining where the ndarray is stored.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nqm.iotdatabase.ndarray.storageformats.FileStorage">
+<em class="property">class </em><code class="descclassname">nqm.iotdatabase.ndarray.storageformats.</code><code class="descname">FileStorage</code><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#FileStorage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.FileStorage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#nqm.iotdatabase.ndarray.storageformats.NDArrayStorage" title="nqm.iotdatabase.ndarray.storageformats.NDArrayStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">nqm.iotdatabase.ndarray.storageformats.NDArrayStorage</span></code></a></p>
+<p>Stores the ndarray as a raw binary file</p>
+<dl class="attribute">
+<dt id="nqm.iotdatabase.ndarray.storageformats.FileStorage.code">
+<code class="descname">code</code><em class="property"> = 'f'</em><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.FileStorage.code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="nqm.iotdatabase.ndarray.storageformats.FileStorage.delete">
+<em class="property">classmethod </em><code class="descname">delete</code><span class="sig-paren">(</span><em>metadata</em>, <em>relative_loc=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#FileStorage.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.FileStorage.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes the numpy array from the given NDArray.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>metadata</strong> (<a class="reference internal" href="nqm.iotdatabase.ndarray.ndarray.html#nqm.iotdatabase.ndarray.ndarray.NDArray" title="nqm.iotdatabase.ndarray.ndarray.NDArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">NDArray</span></code></a>) – The NDArray telling you here the np.ndarray is stored.</li>
+<li><strong>relative_loc</strong> – If NDArray contains a relative filepath,
+it is relative to this absolute path.</li>
+<li><strong>**kwargs</strong> – Other arguments.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="nqm.iotdatabase.ndarray.storageformats.FileStorage.get">
+<em class="property">classmethod </em><code class="descname">get</code><span class="sig-paren">(</span><em>metadata</em>, <em>relative_loc=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#FileStorage.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.FileStorage.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the numpy array from the given NDArray.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>metadata</strong> (<a class="reference internal" href="nqm.iotdatabase.ndarray.ndarray.html#nqm.iotdatabase.ndarray.ndarray.NDArray" title="nqm.iotdatabase.ndarray.ndarray.NDArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">NDArray</span></code></a>) – The NDArray telling you here the np.ndarray is stored.</li>
+<li><strong>relative_loc</strong> – If NDArray contains a relative filepath,
+it is relative to this absolute path.</li>
+<li><strong>**kwargs</strong> – Other arguments.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The loaded numpy array.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="nqm.iotdatabase.ndarray.storageformats.FileStorage.save">
+<em class="property">classmethod </em><code class="descname">save</code><span class="sig-paren">(</span><em>array</em>, <em>relative_loc=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#FileStorage.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.FileStorage.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the numpy array and returns an NDArray.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>) – The array to store.</li>
+<li><strong>relative_loc</strong> – If NDArray contains a relative filepath,
+it is relative to this absolute path.</li>
+<li><strong>**kwargs</strong> – Other arguments.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference internal" href="nqm.iotdatabase.ndarray.ndarray.html#nqm.iotdatabase.ndarray.ndarray.NDArray" title="nqm.iotdatabase.ndarray.ndarray.NDArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">NDArray</span></code></a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The metadata explaining where the ndarray is stored.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nqm.iotdatabase.ndarray.storageformats.GzippedBase64Storage">
+<em class="property">class </em><code class="descclassname">nqm.iotdatabase.ndarray.storageformats.</code><code class="descname">GzippedBase64Storage</code><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#GzippedBase64Storage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.GzippedBase64Storage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#nqm.iotdatabase.ndarray.storageformats.Base64Storage" title="nqm.iotdatabase.ndarray.storageformats.Base64Storage"><code class="xref py py-class docutils literal notranslate"><span class="pre">nqm.iotdatabase.ndarray.storageformats.Base64Storage</span></code></a></p>
+<p>Stores the ndarray as a gzipped base64 string</p>
+<dl class="attribute">
+<dt id="nqm.iotdatabase.ndarray.storageformats.GzippedBase64Storage.code">
+<code class="descname">code</code><em class="property"> = 'G'</em><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.GzippedBase64Storage.code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="nqm.iotdatabase.ndarray.storageformats.GzippedBase64Storage.get">
+<em class="property">classmethod </em><code class="descname">get</code><span class="sig-paren">(</span><em>metadata</em>, <em>relative_loc=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#GzippedBase64Storage.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.GzippedBase64Storage.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the numpy array from the given NDArray.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>metadata</strong> (<a class="reference internal" href="nqm.iotdatabase.ndarray.ndarray.html#nqm.iotdatabase.ndarray.ndarray.NDArray" title="nqm.iotdatabase.ndarray.ndarray.NDArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">NDArray</span></code></a>) – The NDArray telling you here the np.ndarray is stored.</li>
+<li><strong>relative_loc</strong> – If NDArray contains a relative filepath,
+it is relative to this absolute path.</li>
+<li><strong>**kwargs</strong> – Other arguments.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The loaded numpy array.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="nqm.iotdatabase.ndarray.storageformats.GzippedBase64Storage.save">
+<em class="property">classmethod </em><code class="descname">save</code><span class="sig-paren">(</span><em>array</em>, <em>relative_loc=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#GzippedBase64Storage.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.GzippedBase64Storage.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the numpy array and returns an NDArray.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>) – The array to store.</li>
+<li><strong>relative_loc</strong> – If NDArray contains a relative filepath,
+it is relative to this absolute path.</li>
+<li><strong>**kwargs</strong> – Other arguments.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference internal" href="nqm.iotdatabase.ndarray.ndarray.html#nqm.iotdatabase.ndarray.ndarray.NDArray" title="nqm.iotdatabase.ndarray.ndarray.NDArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">NDArray</span></code></a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The metadata explaining where the ndarray is stored.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nqm.iotdatabase.ndarray.storageformats.NDArrayStorage">
+<em class="property">class </em><code class="descclassname">nqm.iotdatabase.ndarray.storageformats.</code><code class="descname">NDArrayStorage</code><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#NDArrayStorage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.NDArrayStorage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Abstract Base Class for classes that save/load NDArrays.</p>
+<dl class="classmethod">
+<dt id="nqm.iotdatabase.ndarray.storageformats.NDArrayStorage.delete">
+<em class="property">classmethod </em><code class="descname">delete</code><span class="sig-paren">(</span><em>metadata</em>, <em>relative_loc=''</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#NDArrayStorage.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.NDArrayStorage.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes the numpy array from the given NDArray.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>metadata</strong> (<a class="reference internal" href="nqm.iotdatabase.ndarray.ndarray.html#nqm.iotdatabase.ndarray.ndarray.NDArray" title="nqm.iotdatabase.ndarray.ndarray.NDArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">NDArray</span></code></a>) – The NDArray telling you here the np.ndarray is stored.</li>
+<li><strong>relative_loc</strong> – If NDArray contains a relative filepath,
+it is relative to this absolute path.</li>
+<li><strong>**kwargs</strong> – Other arguments.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="nqm.iotdatabase.ndarray.storageformats.NDArrayStorage.get">
+<em class="property">classmethod </em><code class="descname">get</code><span class="sig-paren">(</span><em>metadata</em>, <em>relative_loc=''</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#NDArrayStorage.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.NDArrayStorage.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the numpy array from the given NDArray.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>metadata</strong> (<a class="reference internal" href="nqm.iotdatabase.ndarray.ndarray.html#nqm.iotdatabase.ndarray.ndarray.NDArray" title="nqm.iotdatabase.ndarray.ndarray.NDArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">NDArray</span></code></a>) – The NDArray telling you here the np.ndarray is stored.</li>
+<li><strong>relative_loc</strong> – If NDArray contains a relative filepath,
+it is relative to this absolute path.</li>
+<li><strong>**kwargs</strong> – Other arguments.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The loaded numpy array.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="nqm.iotdatabase.ndarray.storageformats.NDArrayStorage.save">
+<em class="property">classmethod </em><code class="descname">save</code><span class="sig-paren">(</span><em>array</em>, <em>relative_loc=''</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#NDArrayStorage.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.NDArrayStorage.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the numpy array and returns an NDArray.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>) – The array to store.</li>
+<li><strong>relative_loc</strong> – If NDArray contains a relative filepath,
+it is relative to this absolute path.</li>
+<li><strong>**kwargs</strong> – Other arguments.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference internal" href="nqm.iotdatabase.ndarray.ndarray.html#nqm.iotdatabase.ndarray.ndarray.NDArray" title="nqm.iotdatabase.ndarray.ndarray.NDArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">NDArray</span></code></a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The metadata explaining where the ndarray is stored.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="nqm.iotdatabase.ndarray.storageformats.NDArrayStorage.storage_types">
+<code class="descname">storage_types</code><em class="property"> = {'B': &lt;class 'nqm.iotdatabase.ndarray.storageformats.Base64Storage'&gt;, 'G': &lt;class 'nqm.iotdatabase.ndarray.storageformats.GzippedBase64Storage'&gt;, 'f': &lt;class 'nqm.iotdatabase.ndarray.storageformats.FileStorage'&gt;}</em><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.NDArrayStorage.storage_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="nqm.iotdatabase.ndarray.storageformats.makePrefix">
+<code class="descclassname">nqm.iotdatabase.ndarray.storageformats.</code><code class="descname">makePrefix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/storageformats.html#makePrefix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.storageformats.makePrefix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">nqm-iot-database-utils-python</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../README.html">README.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONTRIBUTING.html">Contributing</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="nqm.iotdatabase.html">nqm.iotdatabase package</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">nqm</a><ul>
+  <li><a href="nqm.iotdatabase.html">nqm.iotdatabase package</a><ul>
+  <li><a href="nqm.iotdatabase.ndarray.html">nqm.iotdatabase.ndarray package</a><ul>
+      <li>Previous: <a href="nqm.iotdatabase.ndarray.ndarray.html" title="previous chapter">nqm.iotdatabase.ndarray.ndarray module</a></li>
+      <li>Next: <a href="nqm.iotdatabase.database.html" title="next chapter">nqm.iotdatabase.database module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Alois Klink.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/docs/source/nqm.iotdatabase.ndarray.storageformats.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

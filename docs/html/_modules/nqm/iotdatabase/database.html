@@ -13,6 +13,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
@@ -41,9 +42,13 @@
 <span class="kn">import</span> <span class="nn">pathlib</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">tempfile</span> <span class="c1"># used for in-memory dbs</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
 <span class="kn">import</span> <span class="nn">sqlalchemy</span>
 <span class="kn">import</span> <span class="nn">sqlalchemy.engine</span>
 <span class="kn">import</span> <span class="nn">sqlalchemy.dialects.postgresql</span>
+<span class="kn">import</span> <span class="nn">mongosql</span>
 
 <span class="kn">import</span> <span class="nn">shortuuid</span>
 
@@ -52,31 +57,43 @@
 <span class="kn">import</span> <span class="nn">nqm.iotdatabase._sqliteinfotable</span> <span class="k">as</span> <span class="nn">_sqliteinfotable</span>
 <span class="kn">import</span> <span class="nn">nqm.iotdatabase._sqliteschemaconverter</span> <span class="k">as</span> <span class="nn">schemaconverter</span>
 <span class="kn">import</span> <span class="nn">nqm.iotdatabase._sqlitealchemyconverter</span> <span class="k">as</span> <span class="nn">alchemyconverter</span>
+<span class="kn">from</span> <span class="nn">nqm.iotdatabase._datasetdata</span> <span class="k">import</span> <span class="n">DatasetData</span><span class="p">,</span> <span class="n">DatasetCount</span><span class="p">,</span> <span class="n">MetaData</span>
+
+<span class="n">TDX_TYPE</span> <span class="o">=</span> <span class="n">_sqliteconstants</span><span class="o">.</span><span class="n">TDX_TYPE</span>
+<span class="n">SQLITE_GENERAL_TYPE</span> <span class="o">=</span> <span class="n">_sqliteconstants</span><span class="o">.</span><span class="n">SQLITE_GENERAL_TYPE</span>
+<span class="n">SCHEMA_KEY</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">_sqliteconstants</span><span class="o">.</span><span class="n">SCHEMA_KEY</span><span class="p">)</span>
 
 <span class="n">DbTypeEnum</span> <span class="o">=</span> <span class="n">_sqliteutils</span><span class="o">.</span><span class="n">DbTypeEnum</span>
 <span class="n">TDXSchema</span> <span class="o">=</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">TDXSchema</span>
 <span class="n">AddDataResult</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">NewType</span><span class="p">(</span><span class="s2">&quot;AddDataResult&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+<span class="n">TDXData</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Iterable</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">]]</span>
 
-<div class="viewcode-block" id="Database"><a class="viewcode-back" href="../../../index.html#nqm.iotdatabase.database.Database">[docs]</a><span class="k">class</span> <span class="nc">Database</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Database"><a class="viewcode-back" href="../../../docs/source/nqm.iotdatabase.database.html#nqm.iotdatabase.database.Database">[docs]</a><span class="k">class</span> <span class="nc">Database</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;An instance of an NQM InterliNQ Database.</span>
 
 <span class="sd">    Uses SQLite as a backend, but allows for TDX-style commands.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        general: The SQLite General Schema.</span>
+<span class="sd">        general_schema: The SQLite General Schema.</span>
 <span class="sd">        sqlEngine: The `sqlalchemy` engine used for this connection.</span>
 <span class="sd">        table: The `sqlalchemy` data table.</span>
+<span class="sd">        table_model: The SQLAlchemy ORM (model) of the `sqlalchemy` data table.</span>
 <span class="sd">        tdx_schema: The `TDXSchema` used by this dataset.</span>
 <span class="sd">        tdx_data_schema: The `tdx_data_schema` for the data.</span>
 <span class="sd">        data_dir:</span>
 <span class="sd">            The location of the data directory (for saving ndarrays to file)</span>
+<span class="sd">        session_maker:</span>
+<span class="sd">            Used to create an :class:`sqlalchemy.orm.session.Session` for</span>
+<span class="sd">            querying data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">general_schema</span><span class="p">:</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">GeneralSchema</span>
     <span class="n">sqlEngine</span><span class="p">:</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">Engine</span>
     <span class="n">table</span><span class="p">:</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">Table</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">table_model</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">tdx_schema</span><span class="p">:</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">TDXSchema</span> <span class="o">=</span> <span class="n">TDXSchema</span><span class="p">(</span><span class="nb">dict</span><span class="p">())</span>
     <span class="n">tdx_data_schema</span><span class="p">:</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">TDXDataSchema</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
     <span class="n">data_dir</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">session_maker</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">Session</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
         <span class="n">path</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span>
@@ -100,18 +117,18 @@
         <span class="n">tdx_schema</span><span class="p">:</span> <span class="n">TDXSchema</span> <span class="o">=</span> <span class="n">TDXSchema</span><span class="p">(</span><span class="nb">dict</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">checkInfoTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span><span class="p">):</span>
             <span class="n">info_keys</span> <span class="o">=</span> <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">getInfoKeys</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span><span class="p">,</span> <span class="p">[</span><span class="n">SCHEMA_KEY</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_maker</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">info_keys</span><span class="p">:</span> <span class="c1"># lists are False is empty</span>
-                <span class="n">info_keys</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;schema&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+                <span class="n">info_keys</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">SCHEMA_KEY</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
                 <span class="c1"># dataset schema definition</span>
-                <span class="n">tdx_schema</span> <span class="o">=</span> <span class="n">info_keys</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">]</span>
+                <span class="n">tdx_schema</span> <span class="o">=</span> <span class="n">info_keys</span><span class="p">[</span><span class="n">SCHEMA_KEY</span><span class="p">]</span>
                 <span class="c1"># dataset data schema</span>
                 <span class="n">tdx_schema</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;dataSchema&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tdx_schema</span> <span class="o">=</span> <span class="n">tdx_schema</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tdx_data_schema</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span>
             <span class="n">schemaconverter</span><span class="o">.</span><span class="n">TDXDataSchema</span><span class="p">,</span> <span class="n">tdx_schema</span><span class="p">[</span><span class="s2">&quot;dataSchema&quot;</span><span class="p">])</span>
 
-<div class="viewcode-block" id="Database.createDatabase"><a class="viewcode-back" href="../../../index.html#nqm.iotdatabase.database.Database.createDatabase">[docs]</a>    <span class="k">def</span> <span class="nf">createDatabase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="Database.createDatabase"><a class="viewcode-back" href="../../../docs/source/nqm.iotdatabase.database.html#nqm.iotdatabase.database.Database.createDatabase">[docs]</a>    <span class="k">def</span> <span class="nf">createDatabase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
         <span class="nb">id</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Text</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">schema</span><span class="p">:</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">TDXSchema</span> <span class="o">=</span> <span class="n">TDXSchema</span><span class="p">({}),</span>
         <span class="o">**</span><span class="n">kargs</span>
@@ -158,7 +175,7 @@
 
         <span class="k">if</span> <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">checkInfoTable</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
             <span class="c1"># check if old id exists</span>
-            <span class="n">infovals</span> <span class="o">=</span> <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">getInfoKeys</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+            <span class="n">infovals</span> <span class="o">=</span> <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">getInfoKeys</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_maker</span><span class="p">)</span>
             <span class="c1"># use the original id if we can find it</span>
             <span class="nb">id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">infovals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="p">))</span>
 
@@ -168,7 +185,7 @@
             <span class="c1"># create infotable</span>
             <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">createInfoTable</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
             <span class="n">info</span> <span class="o">=</span> <span class="n">kargs</span>
-            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tdxSchema</span>
+            <span class="n">info</span><span class="p">[</span><span class="n">SCHEMA_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">tdxSchema</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
             
             <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">setInfoKeys</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span>
@@ -181,12 +198,14 @@
             <span class="c1"># TODO Maybe add error (none now matches nqm-iot-database-utils)</span>
             <span class="k">return</span> <span class="nb">id</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">alchemyconverter</span><span class="o">.</span><span class="n">makeDataTable</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table_model</span> <span class="o">=</span> <span class="n">alchemyconverter</span><span class="o">.</span><span class="n">makeDataModel</span><span class="p">(</span>
             <span class="n">db</span><span class="p">,</span> <span class="n">sqlite_schema</span><span class="p">,</span> <span class="n">tdxSchema</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">checkfirst</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># create unless already exists</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_model</span><span class="o">.</span><span class="n">__table__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span><span class="p">,</span>  <span class="n">checkfirst</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># create unless already exists</span>
+
         <span class="k">return</span> <span class="nb">id</span></div>
 
-<div class="viewcode-block" id="Database.openDatabase"><a class="viewcode-back" href="../../../index.html#nqm.iotdatabase.database.Database.openDatabase">[docs]</a>    <span class="k">def</span> <span class="nf">openDatabase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="Database.openDatabase"><a class="viewcode-back" href="../../../docs/source/nqm.iotdatabase.database.html#nqm.iotdatabase.database.Database.openDatabase">[docs]</a>    <span class="k">def</span> <span class="nf">openDatabase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
         <span class="n">path</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span>
         <span class="nb">type</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">DbTypeEnum</span><span class="p">],</span>
         <span class="n">mode</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">_sqliteutils</span><span class="o">.</span><span class="n">DbModeEnum</span><span class="p">]</span>
@@ -211,22 +230,28 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">__tmpdir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tmpdir</span><span class="o">.</span><span class="n">name</span>
 
-        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span>
-                <span class="nb">str</span><span class="p">(</span><span class="n">_sqliteconstants</span><span class="o">.</span><span class="n">DATABASE</span><span class="o">.</span><span class="n">NDARR_FOLDER</span><span class="p">)),</span>
-            <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># makes the NDArray folder</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># makes the data folder</span>
 
         <span class="n">uri</span> <span class="o">=</span> <span class="n">_sqliteutils</span><span class="o">.</span><span class="n">sqlAlchemyURL</span><span class="p">(</span><span class="n">path_to_db</span><span class="p">,</span> <span class="n">typeEnum</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
         <span class="c1"># creates the sqlite3 connection</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span> <span class="o">=</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">create_engine</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span><span class="o">.</span><span class="n">execution_options</span><span class="p">(</span>
-            <span class="n">autocommit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">session_factory</span> <span class="o">=</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_maker</span> <span class="o">=</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">scoped_session</span><span class="p">(</span><span class="n">session_factory</span><span class="p">)</span>
+
+        <span class="c1"># check to see if this is an already created database</span>
+        <span class="k">if</span> <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">checkInfoTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span><span class="p">):</span>
+            <span class="c1"># check if old id exists</span>
+            <span class="n">infovals</span> <span class="o">=</span> <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">getInfoKeys</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">SCHEMA_KEY</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_maker</span><span class="p">)</span>
+            <span class="c1"># use the original id if we can find it</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">infovals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">))</span>
+            <span class="n">schema</span> <span class="o">=</span> <span class="n">infovals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SCHEMA_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">createDatabase</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">id</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="Database.compatibleSchema"><a class="viewcode-back" href="../../../index.html#nqm.iotdatabase.database.Database.compatibleSchema">[docs]</a>    <span class="k">def</span> <span class="nf">compatibleSchema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="Database.compatibleSchema"><a class="viewcode-back" href="../../../docs/source/nqm.iotdatabase.database.html#nqm.iotdatabase.database.Database.compatibleSchema">[docs]</a>    <span class="k">def</span> <span class="nf">compatibleSchema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
         <span class="n">schema</span><span class="p">:</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">TDXSchema</span><span class="p">,</span>
         <span class="n">raise_error</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -255,14 +280,101 @@
                         <span class="n">schema</span><span class="p">,</span> <span class="n">db_tdx_schema</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">is_subset</span></div>
 
-<div class="viewcode-block" id="Database.addData"><a class="viewcode-back" href="../../../index.html#nqm.iotdatabase.database.Database.addData">[docs]</a>    <span class="k">def</span> <span class="nf">addData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-        <span class="n">data</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Iterable</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">]]</span>
+    <span class="k">def</span> <span class="nf">_convertDataToSQLite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TDXData</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Iterable</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">SQLVal</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Converts the given TDX Data to SQLite Data</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data: The list of TDX Data Rows</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of SQL data rows.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># self.* lookup is slow so do it once only</span>
+        <span class="n">general_schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">general_schema</span>
+
+        <span class="c1"># convert all the data to SQLite types</span>
+        <span class="n">convertRow</span> <span class="o">=</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">convertRowToSqlite</span>
+        <span class="n">sqlData</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">convertRow</span><span class="p">(</span><span class="n">general_schema</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">sqlData</span>
+
+    <span class="k">def</span> <span class="nf">_convertFilterToSQLite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongofilter</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Converts the given Mongo Query to a MongoSQLite Query</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mongofilter: A Mongo Style Query</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            The converted query that can be given to MongoSQL</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError</span>
+<span class="sd">                If you use mongo query ops (ie &#39;$lt&#39;) on an invalid TDX_TYPE</span>
+<span class="sd">                or if you query on an invalid type (ndarray).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">field</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;$&quot;</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">mongofilter</span><span class="p">):</span>
+            <span class="n">invalid_fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">mongofilter</span> <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;$&quot;</span><span class="p">]</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="ne">RuntimeWarning</span><span class="p">(</span>
+                <span class="n">f</span><span class="s2">&quot;You have a top level mongo query operator </span><span class="si">{invalid_fields}</span><span class="s2"> &quot;</span>
+                <span class="s2">&quot;in your filter. This should work, as long as you don&#39;t try &quot;</span>
+                <span class="s2">&quot;querying any non-sqlite primitive types, ie array/object.&quot;</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">mongofilter</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;$&quot;</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">mongofilter</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="c1"># val might be just a str</span>
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">val</span>
+        <span class="p">):</span>
+            <span class="c1"># check if any column filters have a mongodb query operator</span>
+            <span class="c1"># ie $eq, $lte, etc.</span>
+            <span class="c1"># if they don&#39;t, we can easily convert the given row to sql</span>
+            <span class="n">sql_filter</span><span class="p">,</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convertDataToSQLite</span><span class="p">((</span><span class="n">mongofilter</span><span class="p">,</span> <span class="p">))</span>
+            <span class="k">return</span> <span class="n">sql_filter</span>
+
+        <span class="n">sql_filter</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">prim_types</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">,</span> <span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">DATE</span><span class="p">,</span> <span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">}</span>
+        <span class="n">banned_types</span> <span class="o">=</span> <span class="p">{</span><span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">NDARRAY</span><span class="p">}</span>
+
+        <span class="n">dataschema</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">TDX_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tdx_data_schema</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+                <span class="n">dataschema</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">=</span> <span class="n">TDX_TYPE</span><span class="p">(</span>
+                    <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;__tdxType&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">OBJECT</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Sequence</span><span class="p">):</span>
+                <span class="n">dataschema</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">=</span>  <span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">ARRAY</span>
+
+        <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">mongofilter</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">tdx_type</span> <span class="o">=</span> <span class="n">dataschema</span><span class="p">[</span><span class="n">field</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">tdx_type</span> <span class="ow">in</span> <span class="n">prim_types</span><span class="p">:</span> <span class="c1"># no need for conversion</span>
+                <span class="n">sql_filter</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">tdx_type</span> <span class="ow">in</span> <span class="n">banned_types</span><span class="p">:</span> <span class="c1"># cannot query</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="n">f</span><span class="s2">&quot;All queries are banned on tdx_type </span><span class="si">{tdx_type}</span><span class="s2">. &quot;</span>
+                    <span class="s2">&quot;Given item was </span><span class="si">{field}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;$&quot;</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">val</span><span class="p">):</span>
+                <span class="c1"># val is array/or dict with NO mongo query ops</span>
+                <span class="c1"># can convert normally</span>
+                <span class="n">con_row</span><span class="p">,</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convertDataToSQLite</span><span class="p">([{</span><span class="n">field</span><span class="p">:</span> <span class="n">val</span><span class="p">}])</span>
+                <span class="n">sql_filter</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">con_row</span><span class="p">[</span><span class="n">field</span><span class="p">]</span>
+                <span class="k">continue</span>
+
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;MongoDB Style Queries are only supported on items &quot;</span>
+                <span class="n">f</span><span class="s2">&quot;with TDX Type values of </span><span class="si">{prim_types}</span><span class="s2">. Given &quot;</span>
+                <span class="s2">&quot;item was </span><span class="si">{field}</span><span class="s2"> with type </span><span class="si">{tdx_type}</span><span class="s2">. &quot;</span>
+                <span class="n">f</span><span class="s2">&quot;Mongo Op given was {next(op for op in val if op[0] == &#39;$&#39;)}&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sql_filter</span>
+
+<div class="viewcode-block" id="Database.addData"><a class="viewcode-back" href="../../../docs/source/nqm.iotdatabase.database.html#nqm.iotdatabase.database.Database.addData">[docs]</a>    <span class="k">def</span> <span class="nf">addData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">TDXData</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AddDataResult</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Add data to a database resource.</span>
 
 <span class="sd">        Example:</span>
 <span class="sd">            &gt;&gt;&gt; from nqm.iotdatabase.database import Database</span>
-<span class="sd">            &gt;&gt;&gt; db = Database(&quot;&quot;, &quot;memory&quot;, &quot;w+&quot;);</span>
+<span class="sd">            &gt;&gt;&gt; db = Database(&quot;&quot;, &quot;memory&quot;, &quot;w+&quot;)</span>
 <span class="sd">            &gt;&gt;&gt; id = db.createDatabase(schema={&quot;dataSchema&quot;: {&quot;a&quot;: []}})</span>
 <span class="sd">            &gt;&gt;&gt; db.addData([{&quot;a&quot;: 1}, {&quot;a&quot;: 2}]) == {&quot;count&quot;: 2}</span>
 <span class="sd">            True</span>
@@ -281,20 +393,215 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            The count of data inserted.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># self.* lookup is slow so do it once only</span>
-        <span class="n">general_schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">general_schema</span>
-        
-        <span class="c1"># convert all the data to SQLite types</span>
-        <span class="n">convertRow</span> <span class="o">=</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">convertRowToSqlite</span>
-        <span class="n">sqlData</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">convertRow</span><span class="p">(</span><span class="n">general_schema</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+        <span class="n">sqlData</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convertDataToSQLite</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;self.table has not been initialized yet&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">insert</span><span class="p">(),</span> <span class="n">sqlData</span><span class="p">)</span>
+        <span class="n">connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span><span class="o">.</span><span class="n">execution_options</span><span class="p">(</span>
+            <span class="n">autocommit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">connection</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">insert</span><span class="p">(),</span> <span class="n">sqlData</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">AddDataResult</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">sqlData</span><span class="p">)})</span></div></div>
+        <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">AddDataResult</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">sqlData</span><span class="p">)})</span></div>
+
+<div class="viewcode-block" id="Database.getData"><a class="viewcode-back" href="../../../docs/source/nqm.iotdatabase.database.html#nqm.iotdatabase.database.Database.getData">[docs]</a>    <span class="k">def</span> <span class="nf">getData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+        <span class="nb">filter</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
+        <span class="n">projection</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
+        <span class="n">options</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DatasetData</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Gets all data from the given dataset that matches the filter.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filter:</span>
+<span class="sd">                A mongodb filter object. If omitted, all data will be retrieved.</span>
+<span class="sd">            projection:</span>
+<span class="sd">                A mongodb projection object.</span>
+<span class="sd">                Should be used to restrict the payload to the minimum</span>
+<span class="sd">                properties needed if a lot of data is being retrieved.</span>
+<span class="sd">            options:</span>
+<span class="sd">                A mongodb options object. Can be used to limit, skip, sort etc.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            An object containing the data retrieved in the data field.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If an invalid option is given.</span>
+<span class="sd">            TypeError: If the sort option is a dict, not an OrderedDict.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; from nqm.iotdatabase.database import Database</span>
+<span class="sd">            &gt;&gt;&gt; db = Database(&quot;&quot;, &quot;memory&quot;, &quot;w+&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; id = db.createDatabase(schema={&quot;dataSchema&quot;: {&quot;a&quot;: []}})</span>
+<span class="sd">            &gt;&gt;&gt; db.addData([{&quot;a&quot;: 1}, {&quot;a&quot;: 2}]) == {&quot;count&quot;: 2}</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; datasetData = db.getData(filter={&quot;a&quot;: 2})</span>
+<span class="sd">            &gt;&gt;&gt; datasetData.data == [{&quot;a&quot;: 2}]</span>
+<span class="sd">            True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_maker</span><span class="p">()</span>
+        <span class="n">DataModel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_model</span>
+        <span class="n">valid_query_opt</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;limit&quot;</span><span class="p">,</span> <span class="s2">&quot;skip&quot;</span><span class="p">,</span> <span class="s2">&quot;sort&quot;</span><span class="p">}</span> <span class="c1"># opts to pass to mongosql</span>
+        <span class="n">query_opts</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">options</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">options</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_query_opt</span><span class="p">}</span>
+        <span class="c1"># raise Error if invalid options are given</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_query_opt</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">options</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid option in options param. &quot;</span>
+                <span class="n">f</span><span class="s2">&quot;&#39;{next(k for k in options if k not in valid_query_opt)}&#39; &quot;</span>
+                <span class="n">f</span><span class="s2">&quot;is not a valid option. Valid options are </span><span class="si">{valid_query_opt}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">sort</span> <span class="o">=</span> <span class="n">query_opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sort&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">sort</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sort</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sort</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sort</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># mongosql only accepts OrderedDict for sort</span>
+                <span class="c1"># since dict is orderless</span>
+                <span class="n">query_opts</span><span class="p">[</span><span class="s2">&quot;sort&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">(</span><span class="n">sort</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">sort</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Received Sort Option of type dict with len &quot;</span>
+                    <span class="n">f</span><span class="s2">&quot;{len(sort)}. Python dicts do not have order, therefore &quot;</span>
+                    <span class="s2">&quot;please give either a list or OrderedDict as a sort &quot;</span>
+                    <span class="s2">&quot;option.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># convert dict/array types to JSON</span>
+        <span class="n">mongosql_filter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_convertFilterToSQLite</span><span class="p">(</span><span class="nb">filter</span><span class="p">)</span>
+
+        <span class="n">mongoquery</span> <span class="o">=</span> <span class="n">mongosql</span><span class="o">.</span><span class="n">MongoQuery</span><span class="o">.</span><span class="n">get_for</span><span class="p">(</span>
+            <span class="n">DataModel</span><span class="p">,</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DataModel</span><span class="p">),</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+            <span class="nb">filter</span><span class="o">=</span><span class="n">mongosql_filter</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="n">projection</span><span class="p">,</span> <span class="o">**</span><span class="n">query_opts</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+
+        <span class="n">schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">general_schema</span>
+
+        <span class="n">data_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span>
+
+        <span class="c1"># TODO: MongoSQL&#39;s projection operator doesn&#39;t work correctly.</span>
+        <span class="c1"># we should fix it instead of using this hack</span>
+        <span class="n">noproject</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">projection</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">projected_data</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="n">a</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">noproject</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">mongoquery</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">]</span>
+        <span class="c1"># close the ORM session when done</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">schemaconverter</span><span class="o">.</span><span class="n">convertRowToTdx</span><span class="p">(</span>
+            <span class="n">schema</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">projected_data</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nqmMeta&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;Setting options.nqmMeta to True is not implemented yet.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DatasetData</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Database.getAggregateData"><a class="viewcode-back" href="../../../docs/source/nqm.iotdatabase.database.html#nqm.iotdatabase.database.Database.getAggregateData">[docs]</a>    <span class="k">def</span> <span class="nf">getAggregateData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span>
+        <span class="nb">filter</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DatasetData</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Performs an aggregate query on the given dataset resource.</span>
+
+<span class="sd">        Please note that as MongoSQL is used, some queries may not work.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            pipeline: The aggregate pipeline, as defined in</span>
+<span class="sd">                [the mongodb docs](https://docs.mongodb.com/manual/core/aggregation-pipeline/).</span>
+<span class="sd">                Can be given as a JSON object or as a stringified JSON object.</span>
+<span class="sd">            filter: A mongodb filter object.</span>
+<span class="sd">                If omitted, all data will have the aggregation run on them.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The data made from the aggregrate query.</span>
+<span class="sd">            This will have only one row of data, and will be in SQL types.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; from nqm.iotdatabase.database import Database</span>
+<span class="sd">            &gt;&gt;&gt; db = Database(&quot;&quot;, &quot;memory&quot;, &quot;w+&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; id = db.createDatabase(schema={&quot;dataSchema&quot;: {&quot;a&quot;: []}})</span>
+<span class="sd">            &gt;&gt;&gt; db.addData({&quot;a&quot;: x} for x in range(3)) == {&quot;count&quot;: 3}</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; datasetData = db.getAggregateData(</span>
+<span class="sd">            ...     pipeline={&quot;answer&quot;: {&quot;$sum&quot;: &quot;a&quot;}},</span>
+<span class="sd">            ...     filter={&quot;a&quot;: {&quot;$lte&quot;: 2}})</span>
+<span class="sd">            &gt;&gt;&gt; datasetData.data == [</span>
+<span class="sd">            ...     {&quot;answer&quot;: sum(a for a in range(3) if a &lt;= 2)}] # 1 + 2</span>
+<span class="sd">            True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_maker</span><span class="p">()</span>
+        <span class="n">DataModel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_model</span>
+
+        <span class="n">mongoquery</span> <span class="o">=</span> <span class="n">mongosql</span><span class="o">.</span><span class="n">MongoQuery</span><span class="o">.</span><span class="n">get_for</span><span class="p">(</span>
+            <span class="n">DataModel</span><span class="p">,</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DataModel</span><span class="p">),</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+            <span class="nb">filter</span><span class="o">=</span><span class="nb">filter</span><span class="p">,</span>
+            <span class="n">aggregate</span><span class="o">=</span><span class="n">pipeline</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+
+        <span class="n">schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">general_schema</span>
+        <span class="n">data_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">_asdict</span><span class="p">()</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">mongoquery</span><span class="o">.</span><span class="n">all</span><span class="p">()]</span>
+
+        <span class="c1"># close the ORM session when done</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">DatasetData</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Database.getDataCount"><a class="viewcode-back" href="../../../docs/source/nqm.iotdatabase.database.html#nqm.iotdatabase.database.Database.getDataCount">[docs]</a>    <span class="k">def</span> <span class="nf">getDataCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">filter</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DatasetCount</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Gets a count of the data that matches the filter.</span>
+
+<span class="sd">        Essentially just wraps</span>
+<span class="sd">        :func:`~nqm.iotdatabase.database.Database.getAggregateData` with args</span>
+<span class="sd">        ``pipeline={&quot;count&quot;: {&quot;$sum&quot;: 1}}``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filter:</span>
+<span class="sd">                An optional mongodb filter to apply before counting the data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The metadata and count in the count field.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; from nqm.iotdatabase.database import Database</span>
+<span class="sd">            &gt;&gt;&gt; db = Database(&quot;&quot;, &quot;memory&quot;, &quot;w+&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; id = db.createDatabase(schema={&quot;dataSchema&quot;: {&quot;a&quot;: []}})</span>
+<span class="sd">            &gt;&gt;&gt; db.addData({&quot;a&quot;: x} for x in range(3)) == {&quot;count&quot;: 3}</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; datasetCount = db.getDataCount({&quot;a&quot;: {&quot;$lte&quot;: 2}})</span>
+<span class="sd">            &gt;&gt;&gt; datasetCount.count == sum(1 for a in range(3) if a &lt;= 2)</span>
+<span class="sd">            True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">aggData</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getAggregateData</span><span class="p">(</span>
+            <span class="n">pipeline</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$sum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}},</span>
+            <span class="nb">filter</span><span class="o">=</span><span class="nb">filter</span>
+        <span class="p">)</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">aggData</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;count&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">DatasetCount</span><span class="p">(</span><span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Database.getResource"><a class="viewcode-back" href="../../../docs/source/nqm.iotdatabase.database.html#nqm.iotdatabase.database.Database.getResource">[docs]</a>    <span class="k">def</span> <span class="nf">getResource</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetaData</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Gets the details/metadata for this dataset</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The metadata of this dataset.</span>
+
+<span class="sd">        Example</span>
+<span class="sd">            &gt;&gt;&gt; from nqm.iotdatabase.database import Database</span>
+<span class="sd">            &gt;&gt;&gt; db = Database(&quot;&quot;, &quot;memory&quot;, &quot;w+&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; metadata = {</span>
+<span class="sd">            ...     &quot;schema&quot;: {&quot;dataSchema&quot;: {&quot;a&quot;: []}}, &quot;name&quot;: &quot;Hi World&quot;}</span>
+<span class="sd">            &gt;&gt;&gt; id = db.createDatabase(**metadata)</span>
+<span class="sd">            &gt;&gt;&gt; loaded_md = db.getResource()</span>
+<span class="sd">            &gt;&gt;&gt; # loaded_md&#39;s schemaDefintion creates an empty uniqueIndex</span>
+<span class="sd">            &gt;&gt;&gt; &quot;uniqueIndex&quot; in loaded_md[&quot;schemaDefinition&quot;]</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; loaded_md[&quot;schemaDefinition&quot;][&quot;dataSchema&quot;] == {&quot;a&quot;: []}</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; # can use both md[&quot;x&quot;] format or JavaScript like md.x format</span>
+<span class="sd">            &gt;&gt;&gt; print(loaded_md.name)</span>
+<span class="sd">            Hi World</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">MetaData</span><span class="p">(</span><span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">getInfoKeys</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span><span class="p">,</span> <span class="p">[],</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_maker</span><span class="p">))</span></div></div>
 </pre></div>
 
           </div>
@@ -317,6 +624,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../README.html">README.md</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/source/modules.html">Modules</a></li>
 </ul>
 
 <div class="relations">
@@ -356,7 +664,7 @@
       &copy;2018, Alois Klink.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

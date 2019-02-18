@@ -1,0 +1,17 @@
+nqm.iotdatabase.ndarray package
+===============================
+
+.. automodule:: nqm.iotdatabase.ndarray
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+
+   nqm.iotdatabase.ndarray.fileio
+   nqm.iotdatabase.ndarray.ndarray
+   nqm.iotdatabase.ndarray.storageformats
+

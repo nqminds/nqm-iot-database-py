@@ -13,6 +13,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Contributing Rules" href="CONTRIBUTING.html" />
@@ -34,18 +35,30 @@
           <div class="body" role="main">
             
   <div class="section" id="nqm-iot-database-utils-python">
-<span id="nqm-iot-database-utils-python"></span><h1>nqm-iot-database-utils-python<a class="headerlink" href="#nqm-iot-database-utils-python" title="Permalink to this headline">¶</a></h1>
+<h1>nqm-iot-database-utils-python<a class="headerlink" href="#nqm-iot-database-utils-python" title="Permalink to this headline">¶</a></h1>
 <p>Python port of
 <a class="reference external" href="https://github.com/nqminds/nqm-iot-database-utils"><code class="docutils literal notranslate"><span class="pre">nqminds/nqm-iot-database-utils</span></code></a></p>
 <div class="section" id="installing">
-<span id="installing"></span><h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
-<p>Use the below to install dependecies</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv install
+<h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
+<p>Use the below to install as a library using <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># pypi version is only for Python 2</span>
+pip3 install git+https://github.com/dignio/py-mongosql#egg<span class="o">=</span>mongosql
+<span class="c1"># for SSH:</span>
+<span class="c1"># pip3 install git+ssh://git@github.com/nqminds/nqm-iot-database-py.git#egg=nqm-iot-database-py</span>
+pip3 install git+https://github.com/nqminds/nqm-iot-database-py.git#egg<span class="o">=</span>nqm-iot-database.py
+</pre></div>
+</div>
+<p>You can replace <code class="docutils literal notranslate"><span class="pre">pip3</span></code> with <code class="docutils literal notranslate"><span class="pre">pipenv</span></code> if you prefer.</p>
+<p>To download the library, install dependencies for running tests, and build
+documentation, do:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/nqminds/nqm-iot-database-py.git
+<span class="nb">cd</span> nqm-iot-database-py/
+pipenv --python <span class="m">3</span> install --dev
 </pre></div>
 </div>
 </div>
 <div class="section" id="documentation">
-<span id="documentation"></span><h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
 <p>We use Sphinx, Autodoc, Napoleon, and
 <a class="reference external" href="https://github.com/agronholm/sphinx-autodoc-typehints"><code class="docutils literal notranslate"><span class="pre">sphinx_autodoc_typehints</span></code></a>
 to make our documentation.</p>
@@ -55,37 +68,43 @@ to make our documentation.</p>
 </div>
 </div>
 <div class="section" id="tests">
-<span id="tests"></span><h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
+<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="unittests">
-<span id="unittests"></span><h3>Unittests<a class="headerlink" href="#unittests" title="Permalink to this headline">¶</a></h3>
+<h3>Unittests<a class="headerlink" href="#unittests" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv run python -m pytest
 </pre></div>
 </div>
 </div>
 <div class="section" id="unittests-coverage">
-<span id="unittests-coverage"></span><h3>Unittests Coverage<a class="headerlink" href="#unittests-coverage" title="Permalink to this headline">¶</a></h3>
+<h3>Unittests Coverage<a class="headerlink" href="#unittests-coverage" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv run coverage run --source<span class="o">=</span>nqm -m pytest <span class="o">&amp;&amp;</span> pipenv run coverage report
 </pre></div>
 </div>
 </div>
 <div class="section" id="typetests">
-<span id="typetests"></span><h3>Typetests<a class="headerlink" href="#typetests" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv run mypy -m nqm.iotdatabase._sqliteschemaconverter <span class="o">&amp;&amp;</span> <span class="nb">echo</span> -e <span class="s2">&quot;\e[1;32mPass! \e[0m&quot;</span>
+<h3>Typetests<a class="headerlink" href="#typetests" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv run mypy -m nqm.iotdatabase <span class="o">&amp;&amp;</span> <span class="nb">echo</span> -e <span class="s2">&quot;\e[1;32mPass! \e[0m&quot;</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="doctests">
-<span id="doctests"></span><h3>Doctests<a class="headerlink" href="#doctests" title="Permalink to this headline">¶</a></h3>
+<h3>Doctests<a class="headerlink" href="#doctests" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv run make doctest
 </pre></div>
 </div>
 </div>
+<div class="section" id="linting">
+<h3>Linting<a class="headerlink" href="#linting" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pipenv run pylint nqm
+</pre></div>
 </div>
-<div class="section" id="changes-to-make-in-sqlalchemy">
-<span id="changes-to-make-in-sqlalchemy"></span><h2>Changes to make in SQLAlchemy<a class="headerlink" href="#changes-to-make-in-sqlalchemy" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+<div class="section" id="possible-upgrades-to-make-in-sqlalchemy">
+<h2>Possible upgrades to make in SQLAlchemy<a class="headerlink" href="#possible-upgrades-to-make-in-sqlalchemy" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Add sorting on Primary Keys (SQLite feature)</li>
-<li>allow using SQLite URI connections</li>
+<li>allow using SQLite URI connections (for read-only)</li>
 </ul>
 </div>
 </div>
@@ -113,10 +132,11 @@ to make our documentation.</p>
 <li class="toctree-l2"><a class="reference internal" href="#installing">Installing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#documentation">Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tests">Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#changes-to-make-in-sqlalchemy">Changes to make in SQLAlchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#possible-upgrades-to-make-in-sqlalchemy">Possible upgrades to make in SQLAlchemy</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/source/modules.html">Modules</a></li>
 </ul>
 
 <div class="relations">
@@ -156,7 +176,7 @@ to make our documentation.</p>
       &copy;2018, Alois Klink.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

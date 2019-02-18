@@ -13,6 +13,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="nqm-iot-database-utils-python" href="README.html" />
@@ -41,187 +42,24 @@
 <li class="toctree-l2"><a class="reference internal" href="README.html#installing">Installing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#documentation">Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#tests">Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="README.html#changes-to-make-in-sqlalchemy">Changes to make in SQLAlchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="README.html#possible-upgrades-to-make-in-sqlalchemy">Possible upgrades to make in SQLAlchemy</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="CONTRIBUTING.html#documentation">Documentation</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="docs/source/modules.html">Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="docs/source/nqm.iotdatabase.html">nqm.iotdatabase package</a></li>
+</ul>
+</li>
 </ul>
 </div>
-<div class="section" id="module-nqm.iotdatabase.database">
-<span id="nqm-iotdatabase-database-database-api"></span><h2>nqm.iotdatabase.database.Database API<a class="headerlink" href="#module-nqm.iotdatabase.database" title="Permalink to this headline">¶</a></h2>
-<p>Module for controlling an NQM InterliNQ Database in Python</p>
-<p>See the class <cite>Database</cite> for more info.</p>
-<dl class="class">
-<dt id="nqm.iotdatabase.database.Database">
-<em class="property">class </em><code class="descclassname">nqm.iotdatabase.database.</code><code class="descname">Database</code><span class="sig-paren">(</span><em>path</em>, <em>type</em>, <em>mode</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nqm/iotdatabase/database.html#Database"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.database.Database" title="Permalink to this definition">¶</a></dt>
-<dd><p>An instance of an NQM InterliNQ Database.</p>
-<p>Uses SQLite as a backend, but allows for TDX-style commands.</p>
-<dl class="attribute">
-<dt id="nqm.iotdatabase.database.Database.general">
-<code class="descname">general</code><a class="headerlink" href="#nqm.iotdatabase.database.Database.general" title="Permalink to this definition">¶</a></dt>
-<dd><p>The SQLite General Schema.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="nqm.iotdatabase.database.Database.sqlEngine">
-<code class="descname">sqlEngine</code><a class="headerlink" href="#nqm.iotdatabase.database.Database.sqlEngine" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <cite>sqlalchemy</cite> engine used for this connection.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="nqm.iotdatabase.database.Database.table">
-<code class="descname">table</code><a class="headerlink" href="#nqm.iotdatabase.database.Database.table" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <cite>sqlalchemy</cite> data table.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="nqm.iotdatabase.database.Database.tdx_schema">
-<code class="descname">tdx_schema</code><a class="headerlink" href="#nqm.iotdatabase.database.Database.tdx_schema" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <cite>TDXSchema</cite> used by this dataset.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="nqm.iotdatabase.database.Database.tdx_data_schema">
-<code class="descname">tdx_data_schema</code><a class="headerlink" href="#nqm.iotdatabase.database.Database.tdx_data_schema" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <cite>tdx_data_schema</cite> for the data.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="nqm.iotdatabase.database.Database.data_dir">
-<code class="descname">data_dir</code><a class="headerlink" href="#nqm.iotdatabase.database.Database.data_dir" title="Permalink to this definition">¶</a></dt>
-<dd><p>The location of the data directory (for saving ndarrays to file)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="nqm.iotdatabase.database.Database.addData">
-<code class="descname">addData</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nqm/iotdatabase/database.html#Database.addData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.database.Database.addData" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add data to a database resource.</p>
-<p class="rubric">Example</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">nqm.iotdatabase.database</span> <span class="k">import</span> <span class="n">Database</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">db</span> <span class="o">=</span> <span class="n">Database</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;memory&quot;</span><span class="p">,</span> <span class="s2">&quot;w+&quot;</span><span class="p">);</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">id</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">createDatabase</span><span class="p">(</span><span class="n">schema</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dataSchema&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[]}})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">addData</span><span class="p">([{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}])</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1">#insert ndarray</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nd_db</span> <span class="o">=</span> <span class="n">Database</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;memory&quot;</span><span class="p">,</span> <span class="s2">&quot;w+&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nd_dschema</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;__tdxType&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ndarray&quot;</span><span class="p">]}}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nd_id</span> <span class="o">=</span> <span class="n">nd_db</span><span class="o">.</span><span class="n">createDatabase</span><span class="p">(</span><span class="n">schema</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dataSchema&quot;</span><span class="p">:</span> <span class="n">nd_dschema</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nd_db</span><span class="o">.</span><span class="n">addData</span><span class="p">([{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="n">array</span><span class="p">}])</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]]) – A list of rows, where each row is a mapping of <code class="docutils literal notranslate"><span class="pre">{key:</span> <span class="pre">val}</span></code></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">&lt;function NewType.&lt;locals&gt;.new_type at 0x7f585fb53268&gt;</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The count of data inserted.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="nqm.iotdatabase.database.Database.compatibleSchema">
-<code class="descname">compatibleSchema</code><span class="sig-paren">(</span><em>schema</em>, <em>raise_error=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nqm/iotdatabase/database.html#Database.compatibleSchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.database.Database.compatibleSchema" title="Permalink to this definition">¶</a></dt>
-<dd><p>Checks whether the given schema is a subset of the db schema.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>schema</strong> (<em>&lt;function NewType.&lt;locals&gt;.new_type at 0x7f585fae4048&gt;</em>) – The TDX Schema.</li>
-<li><strong>raise_error</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – <p>If</p>
-<ul>
-<li><code class="docutils literal notranslate"><span class="pre">True</span></code>: raise errors if anything goes wrong</li>
-<li><dl class="first docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">False</span></code>: Catch errors and return <code class="docutils literal notranslate"><span class="pre">False</span></code> if anything goes</dt>
-<dd>wrong</dd>
-</dl>
-</li>
-</ul>
-</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.7)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> – If the schemas are not compatible and <cite>raise_error</cite> is
-<cite>True</cite>.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="nqm.iotdatabase.database.Database.createDatabase">
-<code class="descname">createDatabase</code><span class="sig-paren">(</span><em>id=None</em>, <em>schema={}</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nqm/iotdatabase/database.html#Database.createDatabase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.database.Database.createDatabase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a dataset in the SQLite Database</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>id</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – the requested ID of the new resource. Must be unique.
-Will be auto-generated if omitted (recommended).
-Will be replaced with the original one if the db already is
-created.</li>
-<li><strong>schema</strong> (<em>&lt;function NewType.&lt;locals&gt;.new_type at 0x7f585fae4048&gt;</em>) – <p>schema definition. Should contain two fields:</p>
-<ul>
-<li><code class="docutils literal notranslate"><span class="pre">dataSchema</span></code>: A dict containing the TDX data schema.</li>
-<li><dl class="first docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">uniqueIndex</span></code>:</dt>
-<dd>List of <code class="docutils literal notranslate"><span class="pre">{&quot;asc&quot;:</span> <span class="pre">column}</span></code> or <code class="docutils literal notranslate"><span class="pre">{&quot;desc&quot;:</span> <span class="pre">column}</span></code>
-specifying the unique primary key index.</dd>
-</dl>
-</li>
-</ul>
-</li>
-<li><strong>**kargs</strong> – Other arguments to store in the info table.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The id of the dataset.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="nqm.iotdatabase.database.Database.openDatabase">
-<code class="descname">openDatabase</code><span class="sig-paren">(</span><em>path</em>, <em>type</em>, <em>mode</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/nqm/iotdatabase/database.html#Database.openDatabase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.database.Database.openDatabase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Opens an SQLite database.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code></a>]) – The path of the db.</li>
-<li><strong>type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">DbTypeEnum</span></code>]) – The type of the db: <cite>“file”</cite> or <cite>“memory”</cite></li>
-<li><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">DbModeEnum</span></code>]) – The open mode of the db: <cite>“w+”</cite>, <cite>“rw”</cite>, or <cite>“r”</cite></li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
+<div class="section" id="nqm-iotdatabase-database-database-api">
+<h2>nqm.iotdatabase.database.Database API<a class="headerlink" href="#nqm-iotdatabase-database-database-api" title="Permalink to this headline">¶</a></h2>
+<p>The primary documentation can be found in the
+<a class="reference external" href="docs/source/nqm.iotdatabase.database.html#nqm.iotdatabase.database.Database">Database</a>
+class.</p>
 </div>
 </div>
 
@@ -246,6 +84,7 @@ specifying the unique primary key index.</dd>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="README.html">README.md</a></li>
 <li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/source/modules.html">Modules</a></li>
 </ul>
 
 <div class="relations">
@@ -284,7 +123,7 @@ specifying the unique primary key index.</dd>
       &copy;2018, Alois Klink.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
