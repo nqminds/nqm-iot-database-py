@@ -27,10 +27,7 @@ storage_types = {}
 class NDArrayStorage(abc.ABC):
     """Abstract Base Class for classes that save/load NDArrays.
     """
-    @classmethod
-    @property
-    def storage_types(cls):
-        return storage_types
+    storage_types = storage_types
 
     @classmethod
     @abc.abstractmethod
