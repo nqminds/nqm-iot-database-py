@@ -37,7 +37,6 @@ to make our documentation.
 The below creates html.
 
 ```bash
-pipenv run sphinx-apidoc -Mfe --implicit-namespaces -o docs/source nqm
 pipenv run make html
 ```
 
