@@ -13,9 +13,11 @@ Welcome to nqm-iot-database-utils-python's documentation!
 
    README.md <./README.md>
    Contributing <./CONTRIBUTING.md>
+   Modules <./docs/source/modules.rst>
 
 nqm.iotdatabase.database.Database API
 -------------------------------------
 
-.. automodule:: nqm.iotdatabase.database
-   :members:
+The primary documentation can be found in the
+`Database <docs/source/nqm.iotdatabase.database.html#nqm.iotdatabase.database.Database>`_
+class.
