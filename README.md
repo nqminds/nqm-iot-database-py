@@ -10,11 +10,11 @@ Python port of
 Use the below to install as a library using `pip`:
 
 ```bash
-# pypi version is only for Python 2
+# py-mongosql on pypi does not support Python3
 pip3 install git+https://github.com/dignio/py-mongosql#egg=mongosql
-# for SSH:
-# pip3 install git+ssh://git@github.com/nqminds/nqm-iot-database-py.git#egg=nqm.iotdatabase
-pip3 install git+https://github.com/nqminds/nqm-iot-database-py.git#egg=nqm.iotdatabase
+pip3 install nqm.iotdatabase
+# installing the latest git version:
+# pip3 install git+https://github.com/nqminds/nqm-iot-database-py.git#egg=nqm.iotdatabase
 ```
 
 You can replace `pip3` with `pipenv` if you prefer.
