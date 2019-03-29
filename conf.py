@@ -48,22 +48,13 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-	'sphinx.ext.napoleon',
-	'sphinx_autodoc_typehints',
+    'sphinx.ext.napoleon',
+    'sphinx_autodoc_typehints',
+    'recommonmark',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
-
-# The suffix(es) of source filenames.
-# You can specify multiple suffix as a list of string:
-
-# Render these files as indicated
-source_parsers = {
-    '.md': 'recommonmark.parser.CommonMarkParser'
-}
-
-source_suffix = ['.rst', '.md']
 
 # The master toctree document.
 master_doc = 'index'
