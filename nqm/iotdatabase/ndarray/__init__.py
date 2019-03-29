@@ -4,8 +4,8 @@ import json
 
 import numpy as np # used for typing only
 
-from nqm.iotdatabase.ndarray.ndarray import NDArray
-from nqm.iotdatabase.ndarray.fileio import (
+from .ndarray import NDArray
+from .fileio import (
     saveNDArray, getNDArray, deleteNDArray
 )
 

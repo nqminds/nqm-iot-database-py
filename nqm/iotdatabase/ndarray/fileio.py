@@ -3,8 +3,8 @@
 import typing as ty
 import numpy as np # only for typing
 
-from nqm.iotdatabase.ndarray import NDArray
-from nqm.iotdatabase.ndarray.storageformats import storage_types
+from .ndarray import NDArray
+from .storageformats import storage_types
 
 def saveNDArray(
     array: np.ndarray,

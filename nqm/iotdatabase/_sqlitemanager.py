@@ -2,10 +2,10 @@ import typing as t
 
 import pathlib
 import os
-from nqm.iotdatabase.database import Database
-import nqm.iotdatabase._sqliteutils as _sqliteutils
-import nqm.iotdatabase._sqliteinfotable as _sqliteinfotable
-import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
+from .database import Database
+from . import _sqliteutils
+from . import _sqliteinfotable
+from . import _sqliteschemaconverter as schemaconverter
 import sqlite3
 import sqlalchemy
 import sqlalchemy.engine

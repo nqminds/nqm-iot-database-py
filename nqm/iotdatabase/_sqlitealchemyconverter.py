@@ -6,8 +6,8 @@ import sqlalchemy.event
 
 import mongosql
 
-import nqm.iotdatabase._sqliteconstants as _sqliteconstants
-import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
+from . import _sqliteconstants
+from . import _sqliteschemaconverter as schemaconverter
 
 @sqlalchemy.event.listens_for(sqlalchemy.engine.Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):

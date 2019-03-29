@@ -4,7 +4,7 @@ import os
 import enum
 import typing
 import re
-from nqm.iotdatabase._sqliteconstants import ConstEnum
+from ._sqliteconstants import ConstEnum
 import sqlalchemy.engine.url
 
 class DbTypeEnum(ConstEnum):

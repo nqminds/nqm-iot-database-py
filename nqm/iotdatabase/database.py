@@ -17,12 +17,12 @@ import mongosql
 
 import shortuuid
 
-import nqm.iotdatabase._sqliteconstants as _sqliteconstants
-import nqm.iotdatabase._sqliteutils as _sqliteutils
-import nqm.iotdatabase._sqliteinfotable as _sqliteinfotable
-import nqm.iotdatabase._sqliteschemaconverter as schemaconverter
-import nqm.iotdatabase._sqlitealchemyconverter as alchemyconverter
-from nqm.iotdatabase._datasetdata import DatasetData, DatasetCount, MetaData
+from . import _sqliteconstants
+from . import _sqliteutils
+from . import _sqliteinfotable
+from . import _sqliteschemaconverter as schemaconverter
+from . import _sqlitealchemyconverter as alchemyconverter
+from ._datasetdata import DatasetData, DatasetCount, MetaData
 
 TDX_TYPE = _sqliteconstants.TDX_TYPE
 SQLITE_GENERAL_TYPE = _sqliteconstants.SQLITE_GENERAL_TYPE

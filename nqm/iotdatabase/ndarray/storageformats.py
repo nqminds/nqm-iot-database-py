@@ -16,7 +16,7 @@ import os
 
 import numpy as np
 
-from nqm.iotdatabase.ndarray import NDArray
+from .ndarray import NDArray
 
 def makePrefix():
     unix_time_ms = int(time.time() * 1000)
