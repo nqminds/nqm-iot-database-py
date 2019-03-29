@@ -100,7 +100,8 @@ def make_filedb(filepath):
 
 def test_file_db(tmpdir, make_data):
     """Make sures that a file db actually saves and loads data correctly"""
-    filedb = make_filedb(os.path.join(tmpdir, "testdb.sqlite"))
+    filepath = os.path.join(tmpdir, "testdb.sqlite")
+    filedb = make_filedb(filepath)
     schema = next(schemas())
     filedb.createDatabase(schema=schema)
     number = 100
@@ -108,7 +109,7 @@ def test_file_db(tmpdir, make_data):
     assert filedb.addData(data) == {"count": number}
 
     # reload database
-    filedb = make_filedb(os.path.join(tmpdir, "testdb.sqlite"))
+    filedb = make_filedb(filepath)
     with pytest.raises(sqlalchemy.exc.IntegrityError):
         filedb.addData([data[0]]) # should cause uniqueIndex error
 
