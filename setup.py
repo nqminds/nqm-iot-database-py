@@ -4,7 +4,7 @@ from setuptools import setup
 import nqm.iotdatabase
 
 setup(
-    name='nqm-iot-database-py',
+    name='nqm.iotdatabase',
     version=nqm.iotdatabase.__version__,
     packages=['nqm.iotdatabase', 'nqm.iotdatabase.ndarray'],
     author='Alois Klink',
@@ -15,6 +15,6 @@ setup(
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     url='https://github.com/nqminds/nqm-iot-database-py',
-    install_requires=['sqlalchemy', 'mongosql', 'shortuuid', 'numpy', 'future'],
+    install_requires=['sqlalchemy', 'mongosql>=1.5.1-0', 'shortuuid', 'numpy', 'future'],
     zip_safe=True,
 )

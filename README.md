@@ -13,8 +13,8 @@ Use the below to install as a library using `pip`:
 # pypi version is only for Python 2
 pip3 install git+https://github.com/dignio/py-mongosql#egg=mongosql
 # for SSH:
-# pip3 install git+ssh://git@github.com/nqminds/nqm-iot-database-py.git#egg=nqm-iot-database-py
-pip3 install git+https://github.com/nqminds/nqm-iot-database-py.git#egg=nqm-iot-database.py
+# pip3 install git+ssh://git@github.com/nqminds/nqm-iot-database-py.git#egg=nqm.iotdatabase
+pip3 install git+https://github.com/nqminds/nqm-iot-database-py.git#egg=nqm.iotdatabase
 ```
 
 You can replace `pip3` with `pipenv` if you prefer.
