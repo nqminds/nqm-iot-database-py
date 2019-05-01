@@ -47,6 +47,7 @@ class Database(object):
         tdx_data_schema: The `tdx_data_schema` for the data.
         data_dir:
             The location of the data directory (for saving ndarrays to file)
+        path_to_db: The location of the underlying SQLite file.
         session_maker:
             Used to create an :class:`sqlalchemy.orm.session.Session` for
             querying data.
@@ -58,6 +59,7 @@ class Database(object):
     tdx_schema: schemaconverter.TDXSchema = TDXSchema(dict())
     tdx_data_schema: schemaconverter.TDXDataSchema = dict()
     data_dir: t.Union[t.Text, os.PathLike] = ""
+    path_to_db: os.PathLike = None
     session_maker: t.Callable[[], sqlalchemy.orm.session.Session] = None
 
     def __init__(self,
@@ -182,13 +184,13 @@ class Database(object):
             type: The type of the db: `"file"` or `"memory"`
             mode: The open mode of the db: `"w+"`, `"rw"`, or `"r"`
         """
-        path_to_db = pathlib.Path(path)
+        self.path_to_db = pathlib.Path(path)
 
         typeEnum = DbTypeEnum(type)
         if typeEnum is DbTypeEnum.file:
             # makes the directory the sqlite db is in
             os.makedirs(os.path.dirname(path), exist_ok=True)
-            self.data_dir = path_to_db.with_suffix(
+            self.data_dir = self.path_to_db.with_suffix(
                 str(_sqliteconstants.DATABASE.DATA_FOLDER_SUFFIX))
         else: # in-memory db
             # autodeleted when self is deleted
@@ -197,7 +199,7 @@ class Database(object):
 
         os.makedirs(self.data_dir, exist_ok=True) # makes the data folder
 
-        uri = _sqliteutils.sqlAlchemyURL(path_to_db, typeEnum, mode)
+        uri = _sqliteutils.sqlAlchemyURL(self.path_to_db, typeEnum, mode)
         # creates the sqlite3 connection
         self.sqlEngine = sqlalchemy.create_engine(uri)
 
