@@ -199,9 +199,12 @@ class Database(object):
 
         os.makedirs(self.data_dir, exist_ok=True) # makes the data folder
 
-        uri = _sqliteutils.sqlAlchemyURL(self.path_to_db, typeEnum, mode)
+        creator = _sqliteutils.sqlAlchemyEngineCreator(
+            self.path_to_db, typeEnum, mode)
         # creates the sqlite3 connection
-        self.sqlEngine = sqlalchemy.create_engine(uri)
+        # see https://github.com/pudo/dataset/issues/136 for why we do this
+        self.sqlEngine = sqlalchemy.create_engine(
+            "sqlite:///", creator=creator)
 
         session_factory = sqlalchemy.orm.sessionmaker(bind=self.sqlEngine)
         self.session_maker = sqlalchemy.orm.scoped_session(session_factory)
