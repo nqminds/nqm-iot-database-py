@@ -39,6 +39,8 @@ def sqliteURI(
     }
     dbType = DbTypeEnum(type)
     dbMode = DbModeEnum(mode)
+    if dbType is DbTypeEnum.file:
+        path = os.path.abspath(path)
     if not path:
         if dbType is DbTypeEnum.memory:
             path = ":memory:" # make an unshared in-memory db
@@ -47,7 +49,7 @@ def sqliteURI(
                 f"path={path} is must be a truthy value of type={type}.")
     return urllib.parse.urlunparse(urllib.parse.ParseResult(
         scheme="file",
-        netloc="",
+        netloc="localhost",
         path=urllib.parse.quote(str(path)),
         params="",
         query=urllib.parse.urlencode({
