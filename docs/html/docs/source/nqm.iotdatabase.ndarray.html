@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>nqm.iotdatabase.ndarray package &#8212; nqm-iot-database-utils-python  documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -41,36 +39,34 @@
 <dt id="nqm.iotdatabase.ndarray.loadFromPureJSON">
 <code class="descclassname">nqm.iotdatabase.ndarray.</code><code class="descname">loadFromPureJSON</code><span class="sig-paren">(</span><em>jsonstr</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray.html#loadFromPureJSON"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.loadFromPureJSON" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads a numpy ndarray from a pure JSON string.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>jsonstr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The JSON string returned by <cite>saveToPureJSON</cite>.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">&lt;built-in function array&gt;</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The loaded numpy array.</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>jsonstr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The JSON string returned by <cite>saveToPureJSON</cite>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>&lt;built-in function array&gt;</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The loaded numpy array.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="nqm.iotdatabase.ndarray.saveToPureJSON">
 <code class="descclassname">nqm.iotdatabase.ndarray.</code><code class="descname">saveToPureJSON</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray.html#saveToPureJSON"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.saveToPureJSON" title="Permalink to this definition">¶</a></dt>
 <dd><p>Saves a numpy ndarray as a pure JSON string.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>array</strong> (<em>&lt;built-in function array&gt;</em>) – The numpy array that should be a compressed JSON.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A JSON string that can be loaded with <cite>loadFromPureJSON</cite>.</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>array</strong> (<em>&lt;built-in function array&gt;</em>) – The numpy array that should be a compressed JSON.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A JSON string that can be loaded with <cite>loadFromPureJSON</cite>.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <div class="section" id="submodules">
@@ -131,8 +127,6 @@
     <form class="search" action="../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -153,7 +147,7 @@
       &copy;2018, Alois Klink.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

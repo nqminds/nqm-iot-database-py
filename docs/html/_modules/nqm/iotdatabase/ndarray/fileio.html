@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>nqm.iotdatabase.ndarray.fileio &#8212; nqm-iot-database-utils-python  documentation</title>
     <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
@@ -36,15 +34,21 @@
 <span></span><span class="sd">&quot;&quot;&quot;Stores functions about storing ndarrays in dbs.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">typing</span> <span class="k">as</span> <span class="nn">ty</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="k">import</span> <span class="n">PathLike</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> <span class="c1"># only for typing</span>
 
-<span class="kn">from</span> <span class="nn">nqm.iotdatabase.ndarray</span> <span class="k">import</span> <span class="n">NDArray</span>
-<span class="kn">from</span> <span class="nn">nqm.iotdatabase.ndarray.storageformats</span> <span class="k">import</span> <span class="n">storage_types</span>
+<span class="kn">from</span> <span class="nn">.ndarray</span> <span class="k">import</span> <span class="n">NDArray</span>
+<span class="kn">from</span> <span class="nn">.storageformats</span> <span class="k">import</span> <span class="n">STORAGE_TYPES</span>
+
+<span class="n">Path</span> <span class="o">=</span> <span class="n">ty</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">PathLike</span><span class="p">,</span> <span class="n">ty</span><span class="o">.</span><span class="n">Text</span><span class="p">]</span>
+
+<span class="c1">#TODO: Rename to match PEP8?</span>
+<span class="c1">#pylint: disable=locally-disabled, invalid-name</span>
 
 <div class="viewcode-block" id="saveNDArray"><a class="viewcode-back" href="../../../../docs/source/nqm.iotdatabase.ndarray.fileio.html#nqm.iotdatabase.ndarray.fileio.saveNDArray">[docs]</a><span class="k">def</span> <span class="nf">saveNDArray</span><span class="p">(</span>
-    <span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">relative_loc</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-    <span class="n">storage_method</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">relative_loc</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">storage_method</span><span class="p">:</span> <span class="n">ty</span><span class="o">.</span><span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Saves an array.</span>
 
@@ -58,33 +62,36 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">storage_method</span><span class="p">:</span>
         <span class="n">storage_method</span> <span class="o">=</span> <span class="s2">&quot;f&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">storage_class</span> <span class="o">=</span> <span class="n">storage_types</span><span class="p">[</span><span class="n">storage_method</span><span class="p">]</span>
+        <span class="n">storage_class</span> <span class="o">=</span> <span class="n">STORAGE_TYPES</span><span class="p">[</span><span class="n">storage_method</span><span class="p">]</span>
     <span class="k">except</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
             <span class="n">f</span><span class="s2">&quot;Loading NDArray with version </span><span class="si">{storage_method}</span><span class="s2"> failed!&quot;</span>
-            <span class="n">f</span><span class="s2">&quot;Only versions {storage_types.keys()} are supported.&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">storage_class</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">array</span><span class="p">,</span><span class="n">relative_loc</span><span class="p">)</span></div>
+            <span class="n">f</span><span class="s2">&quot;Only versions {STORAGE_TYPES.keys()} are supported.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">storage_class</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">relative_loc</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="getNDArray"><a class="viewcode-back" href="../../../../docs/source/nqm.iotdatabase.ndarray.fileio.html#nqm.iotdatabase.ndarray.fileio.getNDArray">[docs]</a><span class="k">def</span> <span class="nf">getNDArray</span><span class="p">(</span><span class="n">metadata</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">relative_loc</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<div class="viewcode-block" id="getNDArray"><a class="viewcode-back" href="../../../../docs/source/nqm.iotdatabase.ndarray.fileio.html#nqm.iotdatabase.ndarray.fileio.getNDArray">[docs]</a><span class="k">def</span> <span class="nf">getNDArray</span><span class="p">(</span>
+        <span class="n">metadata</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+        <span class="n">relative_loc</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Opens an NDArray object as a numpy array</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        metadata: The object containing the array metadata.</span>
 <span class="sd">        relative_loc: Relative location of any filepaths.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        A numpy array.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">storage_class</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">storage_class</span> <span class="o">=</span> <span class="n">storage_types</span><span class="p">[</span><span class="n">metadata</span><span class="o">.</span><span class="n">v</span><span class="p">]</span>
+        <span class="n">storage_class</span> <span class="o">=</span> <span class="n">STORAGE_TYPES</span><span class="p">[</span><span class="n">metadata</span><span class="o">.</span><span class="n">v</span><span class="p">]</span>
     <span class="k">except</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
             <span class="n">f</span><span class="s2">&quot;Loading NDArray with version </span><span class="si">{metadata.v}</span><span class="s2"> failed!&quot;</span>
-            <span class="n">f</span><span class="s2">&quot;Only versions {storage_types.keys()} are supported.&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">storage_class</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span><span class="n">relative_loc</span><span class="p">)</span></div>
+            <span class="n">f</span><span class="s2">&quot;Only versions {STORAGE_TYPES.keys()} are supported.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">storage_class</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">relative_loc</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="deleteNDArray"><a class="viewcode-back" href="../../../../docs/source/nqm.iotdatabase.ndarray.fileio.html#nqm.iotdatabase.ndarray.fileio.deleteNDArray">[docs]</a><span class="k">def</span> <span class="nf">deleteNDArray</span><span class="p">(</span><span class="n">metadata</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">relative_loc</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="deleteNDArray"><a class="viewcode-back" href="../../../../docs/source/nqm.iotdatabase.ndarray.fileio.html#nqm.iotdatabase.ndarray.fileio.deleteNDArray">[docs]</a><span class="k">def</span> <span class="nf">deleteNDArray</span><span class="p">(</span><span class="n">metadata</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">relative_loc</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Deletes the given NDArray.</span>
 
 <span class="sd">    Args:</span>
@@ -93,11 +100,11 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">storage_class</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">storage_class</span> <span class="o">=</span> <span class="n">storage_types</span><span class="p">[</span><span class="n">metadata</span><span class="o">.</span><span class="n">v</span><span class="p">]</span>
+        <span class="n">storage_class</span> <span class="o">=</span> <span class="n">STORAGE_TYPES</span><span class="p">[</span><span class="n">metadata</span><span class="o">.</span><span class="n">v</span><span class="p">]</span>
     <span class="k">except</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
             <span class="n">f</span><span class="s2">&quot;Deleting NDArray with version </span><span class="si">{metadata.v}</span><span class="s2"> failed!&quot;</span>
-            <span class="n">f</span><span class="s2">&quot;Only versions {storage_types.keys()} are supported.&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="s2">&quot;Only versions {STORAGE_TYPES.keys()} are supported.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">storage_class</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">relative_loc</span><span class="p">)</span></div>
 </pre></div>
 
@@ -141,8 +148,6 @@
     <form class="search" action="../../../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -163,7 +168,7 @@
       &copy;2018, Alois Klink.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
