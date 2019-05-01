@@ -149,4 +149,5 @@ def test_file_db(tmpdir, make_data):
     uniqueIndex = [list(x.values())[0] for x in schema["uniqueIndex"]]
     for row in data:
         savedData = filedb.getData(
-            {key: row[key] for key in uniqueIndex}).data
+            {key: row[key] for key in uniqueIndex}).data[0]
+        assert savedData == row
