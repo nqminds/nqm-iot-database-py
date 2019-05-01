@@ -47,7 +47,7 @@ def sqliteURI(
                 f"path={path} is must be a truthy value of type={type}.")
     return urllib.parse.urlunparse(urllib.parse.ParseResult(
         scheme="file",
-        netloc="localhost",
+        netloc="",
         path=urllib.parse.quote(str(path)),
         params="",
         query=urllib.parse.urlencode({
@@ -87,7 +87,11 @@ def sqlAlchemyEngineCreator(
 
     uri = sqliteURI(path=path, type=type, mode=mode)
     def create_connection():
-        return sqlite3.connect(uri, uri=True)
+        try:
+            return sqlite3.connect(uri, uri=True)
+        except sqlite3.OperationalError as error:
+            raise sqlite3.OperationalError(
+                f"Opening database with uri {uri} failed with issue {error}")
 
     return create_connection
 

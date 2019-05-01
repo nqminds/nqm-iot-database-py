@@ -131,9 +131,7 @@ def test_insert_nonunique_error(inmemdb, unique_schema, row_equal, make_data):
 def make_filedb(filepath):
     return Database(filepath, "file", "w+")
 
-def test_file_db(tmpdir, make_data):
-    """Make sures that a file db actually saves and loads data correctly"""
-    filepath = os.path.join(tmpdir, "testdb.sqlite")
+def file_db(filepath, make_data):
     filedb = make_filedb(filepath)
     schema = next(schemas())
     filedb.createDatabase(schema=schema)
@@ -151,3 +149,13 @@ def test_file_db(tmpdir, make_data):
         savedData = filedb.getData(
             {key: row[key] for key in uniqueIndex}).data[0]
         assert savedData == row
+
+def test_file_db(tmpdir, make_data):
+    """Make sures that a file db actually saves and loads data correctly"""
+    filepath = os.path.join(tmpdir, "testdb.sqlite")
+    file_db(filepath, make_data)
+
+def test_relative_file_db(tmpdir, make_data):
+    import os
+    filepath = os.path.relpath(os.path.join(tmpdir, "rel_testdb.sqlite"))
+    file_db(filepath, make_data)

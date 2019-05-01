@@ -6,7 +6,7 @@ import nqm.iotdatabase._sqliteutils as sqliteutils
     argnames="path,type,mode,uri",
     argvalues=[
         ("/tmp/test.sqlite3", "memory", "r",
-            "file://localhost/tmp/test.sqlite3?mode=memory")
+            "file:///tmp/test.sqlite3?mode=memory")
         # only one test case since this func is currenty unused
     ]
 )
