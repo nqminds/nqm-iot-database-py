@@ -10,6 +10,14 @@ import json
 import itertools
 import functools
 
+def test_sqlAlchemyEngineCreator():
+    import nqm.iotdatabase._sqliteutils as sqliteutils
+    with pytest.raises(TypeError):
+        creator = sqliteutils.sqlAlchemyEngineCreator(
+            "", type="file", mode="w+")
+        pytest.fail(
+            "Was expecting invalid path sqlAlchemyEngineCreator to fail")
+
 @pytest.fixture
 def in_mem_db():
     """Returns a new rwc in-memory SQLite SQLAlchemy connection"""
@@ -18,8 +26,9 @@ def in_mem_db():
     import sqlalchemy.engine.url
     import urllib.parse
     path = ""
-    url = sqliteutils.sqlAlchemyURL(path, type="memory", mode="w+")
-    return sqlalchemy.create_engine(url)
+    creator = sqliteutils.sqlAlchemyEngineCreator(
+            path, type="memory", mode="w+")
+    return sqlalchemy.create_engine("sqlite:///", creator=creator)
 
 @pytest.fixture
 def blank_table(in_mem_db):

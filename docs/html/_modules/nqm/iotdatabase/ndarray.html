@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>nqm.iotdatabase.ndarray &#8212; nqm-iot-database-utils-python  documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -39,10 +37,13 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> <span class="c1"># used for typing only</span>
 
-<span class="kn">from</span> <span class="nn">nqm.iotdatabase.ndarray.ndarray</span> <span class="k">import</span> <span class="n">NDArray</span>
-<span class="kn">from</span> <span class="nn">nqm.iotdatabase.ndarray.fileio</span> <span class="k">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">.ndarray</span> <span class="k">import</span> <span class="n">NDArray</span>
+<span class="kn">from</span> <span class="nn">.fileio</span> <span class="k">import</span> <span class="p">(</span>
     <span class="n">saveNDArray</span><span class="p">,</span> <span class="n">getNDArray</span><span class="p">,</span> <span class="n">deleteNDArray</span>
 <span class="p">)</span>
+
+<span class="c1">#TODO: Rename to match PEP8?</span>
+<span class="c1">#pylint: disable=locally-disabled, invalid-name</span>
 
 <div class="viewcode-block" id="saveToPureJSON"><a class="viewcode-back" href="../../../docs/source/nqm.iotdatabase.ndarray.html#nqm.iotdatabase.ndarray.saveToPureJSON">[docs]</a><span class="k">def</span> <span class="nf">saveToPureJSON</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Text</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Saves a numpy ndarray as a pure JSON string.</span>
@@ -105,8 +106,6 @@
     <form class="search" action="../../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -127,7 +126,7 @@
       &copy;2018, Alois Klink.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

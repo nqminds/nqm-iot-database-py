@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>nqm-iot-database-utils-python &#8212; nqm-iot-database-utils-python  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -41,11 +39,11 @@
 <div class="section" id="installing">
 <h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
 <p>Use the below to install as a library using <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># pypi version is only for Python 2</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># py-mongosql on pypi does not support Python3</span>
 pip3 install git+https://github.com/dignio/py-mongosql#egg<span class="o">=</span>mongosql
-<span class="c1"># for SSH:</span>
-<span class="c1"># pip3 install git+ssh://git@github.com/nqminds/nqm-iot-database-py.git#egg=nqm-iot-database-py</span>
-pip3 install git+https://github.com/nqminds/nqm-iot-database-py.git#egg<span class="o">=</span>nqm-iot-database.py
+pip3 install nqm.iotdatabase
+<span class="c1"># installing the latest git version:</span>
+<span class="c1"># pip3 install git+https://github.com/nqminds/nqm-iot-database-py.git#egg=nqm.iotdatabase</span>
 </pre></div>
 </div>
 <p>You can replace <code class="docutils literal notranslate"><span class="pre">pip3</span></code> with <code class="docutils literal notranslate"><span class="pre">pipenv</span></code> if you prefer.</p>
@@ -103,8 +101,8 @@ to make our documentation.</p>
 <div class="section" id="possible-upgrades-to-make-in-sqlalchemy">
 <h2>Possible upgrades to make in SQLAlchemy<a class="headerlink" href="#possible-upgrades-to-make-in-sqlalchemy" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Add sorting on Primary Keys (SQLite feature)</li>
-<li>allow using SQLite URI connections (for read-only)</li>
+<li><p>Add sorting on Primary Keys (SQLite feature)</p></li>
+<li><p>allow using SQLite URI connections (for read-only)</p></li>
 </ul>
 </div>
 </div>
@@ -154,8 +152,6 @@ to make our documentation.</p>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -176,7 +172,7 @@ to make our documentation.</p>
       &copy;2018, Alois Klink.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

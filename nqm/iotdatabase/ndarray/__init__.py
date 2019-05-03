@@ -9,6 +9,9 @@ from .fileio import (
     saveNDArray, getNDArray, deleteNDArray
 )
 
+#TODO: Rename to match PEP8?
+#pylint: disable=locally-disabled, invalid-name
+
 def saveToPureJSON(array: np.array) -> typing.Text:
     """Saves a numpy ndarray as a pure JSON string.
 

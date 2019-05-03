@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>nqm.iotdatabase.database &#8212; nqm-iot-database-utils-python  documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -52,12 +50,12 @@
 
 <span class="kn">import</span> <span class="nn">shortuuid</span>
 
-<span class="kn">import</span> <span class="nn">nqm.iotdatabase._sqliteconstants</span> <span class="k">as</span> <span class="nn">_sqliteconstants</span>
-<span class="kn">import</span> <span class="nn">nqm.iotdatabase._sqliteutils</span> <span class="k">as</span> <span class="nn">_sqliteutils</span>
-<span class="kn">import</span> <span class="nn">nqm.iotdatabase._sqliteinfotable</span> <span class="k">as</span> <span class="nn">_sqliteinfotable</span>
-<span class="kn">import</span> <span class="nn">nqm.iotdatabase._sqliteschemaconverter</span> <span class="k">as</span> <span class="nn">schemaconverter</span>
-<span class="kn">import</span> <span class="nn">nqm.iotdatabase._sqlitealchemyconverter</span> <span class="k">as</span> <span class="nn">alchemyconverter</span>
-<span class="kn">from</span> <span class="nn">nqm.iotdatabase._datasetdata</span> <span class="k">import</span> <span class="n">DatasetData</span><span class="p">,</span> <span class="n">DatasetCount</span><span class="p">,</span> <span class="n">MetaData</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_sqliteconstants</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_sqliteutils</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_sqliteinfotable</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_sqliteschemaconverter</span> <span class="k">as</span> <span class="n">schemaconverter</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_sqlitealchemyconverter</span> <span class="k">as</span> <span class="n">alchemyconverter</span>
+<span class="kn">from</span> <span class="nn">._datasetdata</span> <span class="k">import</span> <span class="n">DatasetData</span><span class="p">,</span> <span class="n">DatasetCount</span><span class="p">,</span> <span class="n">MetaData</span>
 
 <span class="n">TDX_TYPE</span> <span class="o">=</span> <span class="n">_sqliteconstants</span><span class="o">.</span><span class="n">TDX_TYPE</span>
 <span class="n">SQLITE_GENERAL_TYPE</span> <span class="o">=</span> <span class="n">_sqliteconstants</span><span class="o">.</span><span class="n">SQLITE_GENERAL_TYPE</span>
@@ -82,6 +80,7 @@
 <span class="sd">        tdx_data_schema: The `tdx_data_schema` for the data.</span>
 <span class="sd">        data_dir:</span>
 <span class="sd">            The location of the data directory (for saving ndarrays to file)</span>
+<span class="sd">        path_to_db: The location of the underlying SQLite file.</span>
 <span class="sd">        session_maker:</span>
 <span class="sd">            Used to create an :class:`sqlalchemy.orm.session.Session` for</span>
 <span class="sd">            querying data.</span>
@@ -93,6 +92,7 @@
     <span class="n">tdx_schema</span><span class="p">:</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">TDXSchema</span> <span class="o">=</span> <span class="n">TDXSchema</span><span class="p">(</span><span class="nb">dict</span><span class="p">())</span>
     <span class="n">tdx_data_schema</span><span class="p">:</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">TDXDataSchema</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
     <span class="n">data_dir</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">path_to_db</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">session_maker</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">Session</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -155,40 +155,41 @@
 <span class="sd">            The id of the dataset.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">id</span> <span class="o">=</span> <span class="n">shortuuid</span><span class="o">.</span><span class="n">uuid</span><span class="p">()</span> <span class="k">if</span> <span class="nb">id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">id</span>
-        <span class="n">db</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span>
+        <span class="n">db_engine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span>
 
         <span class="n">copiedTDXSchema</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">schema</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
 
         <span class="n">copiedTDXSchema</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;dataSchema&quot;</span><span class="p">,</span> <span class="p">{})</span>
         <span class="n">copiedTDXSchema</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;uniqueIndex&quot;</span><span class="p">,</span> <span class="p">{})</span>
 
-        <span class="n">tdxSchema</span> <span class="o">=</span> <span class="n">TDXSchema</span><span class="p">(</span><span class="n">copiedTDXSchema</span><span class="p">)</span>
+        <span class="n">tdx_schema</span> <span class="o">=</span> <span class="n">TDXSchema</span><span class="p">(</span><span class="n">copiedTDXSchema</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">tdxSchema</span><span class="p">[</span><span class="s2">&quot;dataSchema&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">tdxSchema</span><span class="p">[</span><span class="s2">&quot;uniqueIndex&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tdx_schema</span><span class="p">[</span><span class="s2">&quot;dataSchema&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">tdx_schema</span><span class="p">[</span><span class="s2">&quot;uniqueIndex&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">((</span><span class="s2">&quot;schema.dataSchema was empty, but&quot;</span>
                     <span class="s2">&quot; schema.uniqueIndex has a non.empty value of </span><span class="si">{}</span><span class="s2">&quot;</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tdxSchema</span><span class="p">[</span><span class="s2">&quot;uniqueIndex&quot;</span><span class="p">]))</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tdx_schema</span><span class="p">[</span><span class="s2">&quot;uniqueIndex&quot;</span><span class="p">]))</span>
 
         <span class="c1"># convert the TDX schema to an SQLite schema and save it</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">general_schema</span> <span class="o">=</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">convertSchema</span><span class="p">(</span>
-            <span class="n">t</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">schemaconverter</span><span class="o">.</span><span class="n">TDXDataSchema</span><span class="p">,</span> <span class="n">tdxSchema</span><span class="p">[</span><span class="s2">&quot;dataSchema&quot;</span><span class="p">]))</span>
+            <span class="n">t</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">schemaconverter</span><span class="o">.</span><span class="n">TDXDataSchema</span><span class="p">,</span> <span class="n">tdx_schema</span><span class="p">[</span><span class="s2">&quot;dataSchema&quot;</span><span class="p">]))</span>
 
-        <span class="k">if</span> <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">checkInfoTable</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">checkInfoTable</span><span class="p">(</span><span class="n">db_engine</span><span class="p">):</span>
             <span class="c1"># check if old id exists</span>
-            <span class="n">infovals</span> <span class="o">=</span> <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">getInfoKeys</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_maker</span><span class="p">)</span>
+            <span class="n">infovals</span> <span class="o">=</span> <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">getInfoKeys</span><span class="p">(</span>
+                <span class="n">db_engine</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_maker</span><span class="p">)</span>
             <span class="c1"># use the original id if we can find it</span>
             <span class="nb">id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">infovals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="p">))</span>
 
             <span class="c1"># will raise an error if the schemas aren&#39;t compatible</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">compatibleSchema</span><span class="p">(</span><span class="n">TDXSchema</span><span class="p">(</span><span class="n">tdxSchema</span><span class="p">),</span> <span class="n">raise_error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compatibleSchema</span><span class="p">(</span><span class="n">TDXSchema</span><span class="p">(</span><span class="n">tdx_schema</span><span class="p">),</span> <span class="n">raise_error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># create infotable</span>
-            <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">createInfoTable</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+            <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">createInfoTable</span><span class="p">(</span><span class="n">db_engine</span><span class="p">)</span>
             <span class="n">info</span> <span class="o">=</span> <span class="n">kargs</span>
-            <span class="n">info</span><span class="p">[</span><span class="n">SCHEMA_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">tdxSchema</span>
+            <span class="n">info</span><span class="p">[</span><span class="n">SCHEMA_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">tdx_schema</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
             
-            <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">setInfoKeys</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span>
+            <span class="n">_sqliteinfotable</span><span class="o">.</span><span class="n">setInfoKeys</span><span class="p">(</span><span class="n">db_engine</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_tdx_schema</span><span class="p">()</span>
 
@@ -199,8 +200,13 @@
             <span class="k">return</span> <span class="nb">id</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">table_model</span> <span class="o">=</span> <span class="n">alchemyconverter</span><span class="o">.</span><span class="n">makeDataModel</span><span class="p">(</span>
-            <span class="n">db</span><span class="p">,</span> <span class="n">sqlite_schema</span><span class="p">,</span> <span class="n">tdxSchema</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_model</span><span class="o">.</span><span class="n">__table__</span>
+            <span class="n">db_engine</span><span class="p">,</span> <span class="n">sqlite_schema</span><span class="p">,</span> <span class="n">tdx_schema</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">get_table</span><span class="p">():</span>
+            <span class="c1">#pylint: disable=local-disable, no-member</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_model</span><span class="o">.</span><span class="n">__table__</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">get_table</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span><span class="p">,</span>  <span class="n">checkfirst</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># create unless already exists</span>
 
         <span class="k">return</span> <span class="nb">id</span></div>
@@ -217,13 +223,13 @@
 <span class="sd">            type: The type of the db: `&quot;file&quot;` or `&quot;memory&quot;`</span>
 <span class="sd">            mode: The open mode of the db: `&quot;w+&quot;`, `&quot;rw&quot;`, or `&quot;r&quot;`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">path_to_db</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_to_db</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 
-        <span class="n">typeEnum</span> <span class="o">=</span> <span class="n">DbTypeEnum</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">typeEnum</span> <span class="ow">is</span> <span class="n">DbTypeEnum</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+        <span class="n">type_enum</span> <span class="o">=</span> <span class="n">DbTypeEnum</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">type_enum</span> <span class="ow">is</span> <span class="n">DbTypeEnum</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
             <span class="c1"># makes the directory the sqlite db is in</span>
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">path_to_db</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path_to_db</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span>
                 <span class="nb">str</span><span class="p">(</span><span class="n">_sqliteconstants</span><span class="o">.</span><span class="n">DATABASE</span><span class="o">.</span><span class="n">DATA_FOLDER_SUFFIX</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span> <span class="c1"># in-memory db</span>
             <span class="c1"># autodeleted when self is deleted</span>
@@ -232,11 +238,15 @@
 
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># makes the data folder</span>
 
-        <span class="n">uri</span> <span class="o">=</span> <span class="n">_sqliteutils</span><span class="o">.</span><span class="n">sqlAlchemyURL</span><span class="p">(</span><span class="n">path_to_db</span><span class="p">,</span> <span class="n">typeEnum</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+        <span class="n">creator</span> <span class="o">=</span> <span class="n">_sqliteutils</span><span class="o">.</span><span class="n">sqlAlchemyEngineCreator</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path_to_db</span><span class="p">,</span> <span class="n">type_enum</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
         <span class="c1"># creates the sqlite3 connection</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span> <span class="o">=</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">create_engine</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span>
+        <span class="c1"># see https://github.com/pudo/dataset/issues/136 for why we do this</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span> <span class="o">=</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">create_engine</span><span class="p">(</span>
+            <span class="s2">&quot;sqlite:///&quot;</span><span class="p">,</span> <span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">)</span>
 
         <span class="n">session_factory</span> <span class="o">=</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sqlEngine</span><span class="p">)</span>
+        <span class="c1"># TODO: Replace session_maker with @contextlib.contextmanager format</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">session_maker</span> <span class="o">=</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">scoped_session</span><span class="p">(</span><span class="n">session_factory</span><span class="p">)</span>
 
         <span class="c1"># check to see if this is an already created database</span>
@@ -282,10 +292,13 @@
 
     <span class="k">def</span> <span class="nf">_convertDataToSQLite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TDXData</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Iterable</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">SQLVal</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Converts the given TDX Data to SQLite Data</span>
+        <span class="sd">&quot;&quot;&quot;Converts the given TDX Data to SQLite Data.</span>
+
+<span class="sd">        TDX Data is a list of dicts of Python objects.</span>
+<span class="sd">        SQLite Data is a list of dicts of JSON-strings.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            data: The list of TDX Data Rows</span>
+<span class="sd">            data: The list of TDX Data Rows.</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            A list of SQL data rows.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -293,10 +306,11 @@
         <span class="n">general_schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">general_schema</span>
 
         <span class="c1"># convert all the data to SQLite types</span>
-        <span class="n">convertRow</span> <span class="o">=</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">convertRowToSqlite</span>
-        <span class="n">sqlData</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">convertRow</span><span class="p">(</span><span class="n">general_schema</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">sqlData</span>
+        <span class="n">convert_row</span> <span class="o">=</span> <span class="n">schemaconverter</span><span class="o">.</span><span class="n">convertRowToSqlite</span>
+        <span class="n">sql_data</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">convert_row</span><span class="p">(</span><span class="n">general_schema</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">sql_data</span>
 
     <span class="k">def</span> <span class="nf">_convertFilterToSQLite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongofilter</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">]:</span>
@@ -334,13 +348,15 @@
             <span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">,</span> <span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">DATE</span><span class="p">,</span> <span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">NUMBER</span><span class="p">}</span>
         <span class="n">banned_types</span> <span class="o">=</span> <span class="p">{</span><span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">NDARRAY</span><span class="p">}</span>
 
+        <span class="c1"># convert ugly TDX Data Schema to Map of Column to Type.</span>
+        <span class="c1"># might need to be changed in the future for new TDX dataschema schema</span>
         <span class="n">dataschema</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">TDX_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tdx_data_schema</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
-                <span class="n">dataschema</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">=</span> <span class="n">TDX_TYPE</span><span class="p">(</span>
-                    <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;__tdxType&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">OBJECT</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Sequence</span><span class="p">):</span>
-                <span class="n">dataschema</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">=</span>  <span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">ARRAY</span>
+        <span class="k">for</span> <span class="n">column</span><span class="p">,</span> <span class="n">column_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tdx_data_schema</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_type</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+                <span class="n">dataschema</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">TDX_TYPE</span><span class="p">(</span>
+                    <span class="n">column_type</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;__tdxType&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">OBJECT</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_type</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Sequence</span><span class="p">):</span>
+                <span class="n">dataschema</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span>  <span class="n">TDX_TYPE</span><span class="o">.</span><span class="n">ARRAY</span>
 
         <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">mongofilter</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">tdx_type</span> <span class="o">=</span> <span class="n">dataschema</span><span class="p">[</span><span class="n">field</span><span class="p">]</span>
@@ -438,8 +454,10 @@
 <span class="sd">            &gt;&gt;&gt; datasetData.data == [{&quot;a&quot;: 2}]</span>
 <span class="sd">            True</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_maker</span><span class="p">()</span>
-        <span class="n">DataModel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_model</span>
+        <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nqmMeta&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;Setting options.nqmMeta to True is not implemented yet.&quot;</span><span class="p">)</span>
+
         <span class="n">valid_query_opt</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;limit&quot;</span><span class="p">,</span> <span class="s2">&quot;skip&quot;</span><span class="p">,</span> <span class="s2">&quot;sort&quot;</span><span class="p">}</span> <span class="c1"># opts to pass to mongosql</span>
         <span class="n">query_opts</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">options</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">options</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_query_opt</span><span class="p">}</span>
         <span class="c1"># raise Error if invalid options are given</span>
@@ -463,11 +481,12 @@
                     <span class="s2">&quot;option.&quot;</span><span class="p">)</span>
 
         <span class="c1"># convert dict/array types to JSON</span>
-        <span class="n">mongosql_filter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_convertFilterToSQLite</span><span class="p">(</span><span class="nb">filter</span><span class="p">)</span>
+        <span class="n">mongosql_filter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convertFilterToSQLite</span><span class="p">(</span><span class="nb">filter</span><span class="p">)</span>
 
+        <span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_maker</span><span class="p">()</span>
         <span class="n">mongoquery</span> <span class="o">=</span> <span class="n">mongosql</span><span class="o">.</span><span class="n">MongoQuery</span><span class="o">.</span><span class="n">get_for</span><span class="p">(</span>
-            <span class="n">DataModel</span><span class="p">,</span>
-            <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DataModel</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">table_model</span><span class="p">,</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table_model</span><span class="p">),</span>
         <span class="p">)</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
             <span class="nb">filter</span><span class="o">=</span><span class="n">mongosql_filter</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="n">projection</span><span class="p">,</span> <span class="o">**</span><span class="n">query_opts</span><span class="p">,</span>
         <span class="p">)</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
@@ -478,7 +497,7 @@
 
         <span class="c1"># TODO: MongoSQL&#39;s projection operator doesn&#39;t work correctly.</span>
         <span class="c1"># we should fix it instead of using this hack</span>
-        <span class="n">noproject</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">projection</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">noproject</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">projection</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">projected_data</span> <span class="o">=</span> <span class="p">[</span>
             <span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="n">a</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">noproject</span><span class="p">}</span>
             <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">mongoquery</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
@@ -488,11 +507,8 @@
 
         <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">schemaconverter</span><span class="o">.</span><span class="n">convertRowToTdx</span><span class="p">(</span>
             <span class="n">schema</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">projected_data</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nqmMeta&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                <span class="s2">&quot;Setting options.nqmMeta to True is not implemented yet.&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">DatasetData</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+        <span class="k">return</span> <span class="n">DatasetData</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Database.getAggregateData"><a class="viewcode-back" href="../../../docs/source/nqm.iotdatabase.database.html#nqm.iotdatabase.database.Database.getAggregateData">[docs]</a>    <span class="k">def</span> <span class="nf">getAggregateData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span>
         <span class="nb">filter</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
@@ -539,6 +555,8 @@
         <span class="n">schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">general_schema</span>
         <span class="n">data_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span>
 
+        <span class="c1">#TODO: Make sure this is tested (above vars are unused, why?)</span>
+
         <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">_asdict</span><span class="p">()</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">mongoquery</span><span class="o">.</span><span class="n">all</span><span class="p">()]</span>
 
         <span class="c1"># close the ORM session when done</span>
@@ -571,11 +589,11 @@
 <span class="sd">            &gt;&gt;&gt; datasetCount.count == sum(1 for a in range(3) if a &lt;= 2)</span>
 <span class="sd">            True</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">aggData</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getAggregateData</span><span class="p">(</span>
+        <span class="n">aggregate_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getAggregateData</span><span class="p">(</span>
             <span class="n">pipeline</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$sum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}},</span>
-            <span class="nb">filter</span><span class="o">=</span><span class="nb">filter</span>
+            <span class="nb">filter</span><span class="o">=</span><span class="nb">filter</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">count</span> <span class="o">=</span> <span class="n">aggData</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;count&quot;</span><span class="p">]</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">aggregate_data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;count&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">DatasetCount</span><span class="p">(</span><span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Database.getResource"><a class="viewcode-back" href="../../../docs/source/nqm.iotdatabase.database.html#nqm.iotdatabase.database.Database.getResource">[docs]</a>    <span class="k">def</span> <span class="nf">getResource</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetaData</span><span class="p">:</span>
@@ -642,8 +660,6 @@
     <form class="search" action="../../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -664,7 +680,7 @@
       &copy;2018, Alois Klink.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

@@ -75,6 +75,39 @@ def test_insert_dataset(db, schema, make_data):
         with pytest.raises(ValueError):
             db.addData(data)
 
+def test_dataset_mode(tmpdir, make_data):
+    filepath = os.path.join(tmpdir, "testmodedb.sqlite")
+    for mode in "rw", "r":
+        with pytest.raises(sqlalchemy.exc.OperationalError):
+            filedb = Database(filepath, "file", mode)
+            pytest.fail(
+                f"Opening non-existant db in mode {mode} should have failed")
+
+    filedb = Database(filepath, "file", "w+")
+    schema = next(schemas())
+    filedb.createDatabase(schema=schema)
+    number = 100
+    data = make_data(schema, number=number)
+
+    filedb = Database(filepath, "file", "r")
+    with pytest.raises(sqlalchemy.exc.OperationalError, match="readonly"):
+        # should fail because in readonly mode
+        filedb.addData(data)
+        pytest.fail("Reading data in readonly mode should fail")
+
+    filedb = Database(filepath, "file", "rw")
+    # should succeed since in readwrite mode
+    assert filedb.addData(data) == {"count": number}
+
+    uniqueIndex = [list(x.values())[0] for x in schema["uniqueIndex"]]
+
+    for mode in "r", "rw", "w+":
+        filedb = Database(filepath, "file", mode)
+        for row in data:
+            savedData = filedb.getData(
+            {key: row[key] for key in uniqueIndex}).data[0]
+            assert savedData == row
+
 @pytest.mark.dependency(depends=["test_insert_dataset"])
 def test_insert_nonunique_error(inmemdb, unique_schema, row_equal, make_data):
     inmemdb.createDatabase(schema=unique_schema)
@@ -98,9 +131,7 @@ def test_insert_nonunique_error(inmemdb, unique_schema, row_equal, make_data):
 def make_filedb(filepath):
     return Database(filepath, "file", "w+")
 
-def test_file_db(tmpdir, make_data):
-    """Make sures that a file db actually saves and loads data correctly"""
-    filepath = os.path.join(tmpdir, "testdb.sqlite")
+def file_db(filepath, make_data):
     filedb = make_filedb(filepath)
     schema = next(schemas())
     filedb.createDatabase(schema=schema)
@@ -116,4 +147,15 @@ def test_file_db(tmpdir, make_data):
     uniqueIndex = [list(x.values())[0] for x in schema["uniqueIndex"]]
     for row in data:
         savedData = filedb.getData(
-            {key: row[key] for key in uniqueIndex}).data
+            {key: row[key] for key in uniqueIndex}).data[0]
+        assert savedData == row
+
+def test_file_db(tmpdir, make_data):
+    """Make sures that a file db actually saves and loads data correctly"""
+    filepath = os.path.join(tmpdir, "testdb.sqlite")
+    file_db(filepath, make_data)
+
+def test_relative_file_db(tmpdir, make_data):
+    import os
+    filepath = os.path.relpath(os.path.join(tmpdir, "rel_testdb.sqlite"))
+    file_db(filepath, make_data)

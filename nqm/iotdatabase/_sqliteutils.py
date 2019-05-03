@@ -1,11 +1,10 @@
 """Stores util functions for SQLite"""
 import urllib.parse
 import os
-import enum
 import typing
 import re
 from ._sqliteconstants import ConstEnum
-import sqlalchemy.engine.url
+import sqlite3
 
 class DbTypeEnum(ConstEnum):
     memory = "memory"
@@ -24,11 +23,11 @@ def sqliteURI(
 ) -> typing.Text:
     """ Creates a URI for opening an SQLite Connection
 
-    See https://www.sqlite.org/uri.html
+    See https://www.sqlite.org/uri.html.
     
     Args:
         path: The path of the db.
-        type: The type of the db: `"file"` or `"memory"`
+        type: The type of the db: `"file"` or `"memory"`.
         mode: The open mode of the db: `"w+"`, `"rw"`, or `"r"`
     """
     modeMap = {
@@ -40,9 +39,17 @@ def sqliteURI(
     }
     dbType = DbTypeEnum(type)
     dbMode = DbModeEnum(mode)
+    if dbType is DbTypeEnum.file:
+        path = os.path.abspath(path)
+    if not path:
+        if dbType is DbTypeEnum.memory:
+            path = ":memory:" # make an unshared in-memory db
+        else:
+            raise TypeError(
+                f"path={path} is must be a truthy value of type={type}.")
     return urllib.parse.urlunparse(urllib.parse.ParseResult(
         scheme="file",
-        netloc="",
+        netloc="localhost",
         path=urllib.parse.quote(str(path)),
         params="",
         query=urllib.parse.urlencode({
@@ -52,23 +59,43 @@ def sqliteURI(
         fragment=""
     ))
 
-def sqlAlchemyURL(
+def sqlAlchemyEngineCreator(
     path: typing.Union[os.PathLike, typing.Text] = None,
     type: typing.Union[DbTypeEnum, typing.Text] = DbTypeEnum.file,
     mode: typing.Union[DbModeEnum, typing.Text] = DbModeEnum.readwritecreate
-) -> sqlalchemy.engine.url.URL:
-    """ Creates an SQLAlchemy URL for opening an SQLite Connection
-    """
-    dbType = DbTypeEnum(type)
-    dbMode = DbModeEnum(mode)
-    if dbMode is not DbModeEnum.readwritecreate:
-        raise NotImplementedError(
-            "There is currently no way to set open modes in SQLAlchemy.")
+) -> typing.Callable[[], sqlite3.Connection]:
+    """ Creates an SQLAlchemy Engine creator for opening an SQLite Connection.
 
-    return sqlalchemy.engine.url.URL(
-        drivername="sqlite",
-        database=":memory:" if dbType is DbTypeEnum.memory else str(path)
-    )
+    Arguments:
+        path:
+            The path to the desired file.
+            One can leave this empty if an in-memory db is wanted.
+        type: If this is a file db or an in-memory db.
+        mode:
+            Whether to open this in readonly, read-write,
+            or read-write-create mode.
+
+    Returns:
+        A function that can be passed as the ``creator`` ``kwarg`` in
+        `sqlalchemy.create_engine`.
+
+    Example:
+
+        > import sqlalchemy
+        > from nqm.iotdatabase._sqliteutils import sqlAlchemyEngineCreator
+        > creator = sqlAlchemyEngineCreator("/tmp/example.sqlite", "file", "rw")
+        > db = sqlalchemy.create_engine("sqlite:///", creator=creator)
+    """
+
+    uri = sqliteURI(path=path, type=type, mode=mode)
+    def create_connection():
+        try:
+            return sqlite3.connect(uri, uri=True)
+        except sqlite3.OperationalError as error:
+            raise sqlite3.OperationalError(
+                f"Opening database with uri {uri} failed with issue {error}")
+
+    return create_connection
 
 def escapeIdentifier(identifier: typing.Text) -> typing.Text:
     """Escapes an SQLite Identifier, e.g. a column name.

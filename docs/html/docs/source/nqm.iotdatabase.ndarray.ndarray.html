@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>nqm.iotdatabase.ndarray.ndarray module &#8212; nqm-iot-database-utils-python  documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -74,36 +72,30 @@
 <dt id="nqm.iotdatabase.ndarray.ndarray.NDArray.from_array">
 <em class="property">classmethod </em><code class="descname">from_array</code><span class="sig-paren">(</span><em>array</em>, <em>pointer</em>, <em>version</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/ndarray.html#NDArray.from_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.ndarray.NDArray.from_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates an NDArray fron a numpy array.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>array</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>) – The numpy array with correct metadata.</li>
-<li><strong>pointer</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – A pointer to the data.</li>
-<li><strong>version</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The version of the metadata.
-“f” means the pointer is a filepath to a raw binary blob.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>array</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>) – The numpy array with correct metadata.</p></li>
+<li><p><strong>pointer</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – A pointer to the data.</p></li>
+<li><p><strong>version</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The version of the metadata.
+“f” means the pointer is a filepath to a raw binary blob.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The created NDArray metadata object.</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The created NDArray metadata object.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="classmethod">
 <dt id="nqm.iotdatabase.ndarray.ndarray.NDArray.fromjson">
 <em class="property">classmethod </em><code class="descname">fromjson</code><span class="sig-paren">(</span><em>jsonstr</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/ndarray.html#NDArray.fromjson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.ndarray.NDArray.fromjson" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#nqm.iotdatabase.ndarray.ndarray.NDArray" title="nqm.iotdatabase.ndarray.ndarray.NDArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">NDArray</span></code></a></td>
-</tr>
-</tbody>
-</table>
+<dd><p>Creates an NDArray object from a json.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#nqm.iotdatabase.ndarray.ndarray.NDArray" title="nqm.iotdatabase.ndarray.ndarray.NDArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">NDArray</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
@@ -131,27 +123,23 @@ ie <code class="docutils literal notranslate"><span class="pre">&gt;i8</span></c
 <dl class="method">
 <dt id="nqm.iotdatabase.ndarray.ndarray.NDArray.todict">
 <code class="descname">todict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/ndarray.html#NDArray.todict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.ndarray.NDArray.todict" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></td>
-</tr>
-</tbody>
-</table>
+<dd><p>Returns this object as a dict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="nqm.iotdatabase.ndarray.ndarray.NDArray.tojson">
 <code class="descname">tojson</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/ndarray.html#NDArray.tojson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.ndarray.NDArray.tojson" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
-</tr>
-</tbody>
-</table>
+<dd><p>Returns this object as a json</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
@@ -162,29 +150,37 @@ ie <code class="docutils literal notranslate"><span class="pre">&gt;i8</span></c
 
 </dd></dl>
 
+<dl class="data">
+<dt id="nqm.iotdatabase.ndarray.ndarray.VARLENGTH_TYPE_CHARS">
+<code class="descclassname">nqm.iotdatabase.ndarray.ndarray.</code><code class="descname">VARLENGTH_TYPE_CHARS</code><em class="property"> = {'O', 'U', 'V'}</em><a class="headerlink" href="#nqm.iotdatabase.ndarray.ndarray.VARLENGTH_TYPE_CHARS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set of Numpy types that require a length to be specified</p>
+</dd></dl>
+
 <dl class="function">
 <dt id="nqm.iotdatabase.ndarray.ndarray.basictypestring">
-<code class="descclassname">nqm.iotdatabase.ndarray.ndarray.</code><code class="descname">basictypestring</code><span class="sig-paren">(</span><em>charBuiltinType</em>, <em>length=-1</em>, <em>byteorder='='</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/ndarray.html#basictypestring"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.ndarray.basictypestring" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
-</tr>
-</tbody>
-</table>
+<code class="descclassname">nqm.iotdatabase.ndarray.ndarray.</code><code class="descname">basictypestring</code><span class="sig-paren">(</span><em>dtype_char</em>, <em>length=-1</em>, <em>byteorder='='</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nqm/iotdatabase/ndarray/ndarray.html#basictypestring"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nqm.iotdatabase.ndarray.ndarray.basictypestring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a compressed typestring from a given Numpy type details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dtype_char</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – A single char from Numpy. See <cite>numpy.dtype.char</cite>.</p></li>
+<li><p><strong>length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – The length of the dtype in bytes. See <cite>numpy.dtype.itemsize</cite></p></li>
+<li><p><strong>byteorder</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The byte order, ie little/big-endian. See <cite>numpy.dtype.byteorder</cite></p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A numpy typestring that is as compressed as possible.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="data">
 <dt id="nqm.iotdatabase.ndarray.ndarray.np_type_to_single_char">
 <code class="descclassname">nqm.iotdatabase.ndarray.ndarray.</code><code class="descname">np_type_to_single_char</code><em class="property"> = {&lt;class 'numpy.bool_'&gt;: '?', &lt;class 'numpy.int8'&gt;: 'b', &lt;class 'numpy.uint8'&gt;: 'B', &lt;class 'numpy.int16'&gt;: 'h', &lt;class 'numpy.uint16'&gt;: 'H', &lt;class 'numpy.int32'&gt;: 'i', &lt;class 'numpy.uint32'&gt;: 'I', &lt;class 'numpy.int64'&gt;: 'l', &lt;class 'numpy.uint64'&gt;: 'L', &lt;class 'numpy.int64'&gt;: 'q', &lt;class 'numpy.uint64'&gt;: 'Q', &lt;class 'numpy.float16'&gt;: 'e', &lt;class 'numpy.float32'&gt;: 'f', &lt;class 'numpy.float64'&gt;: 'd', &lt;class 'numpy.float128'&gt;: 'g', &lt;class 'numpy.complex64'&gt;: 'F', &lt;class 'numpy.complex128'&gt;: 'D', &lt;class 'numpy.complex256'&gt;: 'G', &lt;class 'numpy.object_'&gt;: 'O', &lt;class 'numpy.bytes_'&gt;: 'a', &lt;class 'numpy.str_'&gt;: 'U', &lt;class 'numpy.void'&gt;: 'V', &lt;class 'numpy.datetime64'&gt;: 'M', &lt;class 'numpy.timedelta64'&gt;: 'm'}</em><a class="headerlink" href="#nqm.iotdatabase.ndarray.ndarray.np_type_to_single_char" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dict of single-chars to numpy types, ie p is an int64, P uint64</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="nqm.iotdatabase.ndarray.ndarray.varlength_types">
-<code class="descclassname">nqm.iotdatabase.ndarray.ndarray.</code><code class="descname">varlength_types</code><em class="property"> = {'O', 'U', 'V'}</em><a class="headerlink" href="#nqm.iotdatabase.ndarray.ndarray.varlength_types" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set of Numpy types that require a length to be specified</p>
 </dd></dl>
 
 </div>
@@ -237,8 +233,6 @@ ie <code class="docutils literal notranslate"><span class="pre">&gt;i8</span></c
     <form class="search" action="../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -259,7 +253,7 @@ ie <code class="docutils literal notranslate"><span class="pre">&gt;i8</span></c
       &copy;2018, Alois Klink.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

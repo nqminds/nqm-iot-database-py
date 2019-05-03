@@ -13,83 +13,78 @@ import abc
 import base64
 import gzip
 import os
+import typing
 
 import numpy as np
 
 from .ndarray import NDArray
 
-def makePrefix():
+def make_prefix() -> typing.Text:
+    """Makes the prefix for an NDArray stored as a file."""
     unix_time_ms = int(time.time() * 1000)
     unix_bytes = unix_time_ms.to_bytes(8, byteorder="big")
     return base64.urlsafe_b64encode(unix_bytes).decode("ascii")
 
-storage_types = {}
+STORAGE_TYPES = {}
 class NDArrayStorage(abc.ABC):
     """Abstract Base Class for classes that save/load NDArrays.
     """
-    storage_types = storage_types
+    storage_types = STORAGE_TYPES
 
     @classmethod
     @abc.abstractmethod
-    def get(cls, metadata: NDArray, relative_loc="", **kwargs) -> np.ndarray:
+    def get(cls, metadata: NDArray, relative_loc="") -> np.ndarray:
         """Loads the numpy array from the given NDArray.
 
         Args:
             metadata: The NDArray telling you here the np.ndarray is stored.
             relative_loc: If NDArray contains a relative filepath,
                 it is relative to this absolute path.
-            **kwargs: Other arguments.
 
         Returns:
             The loaded numpy array.
         """
-        pass
 
     @classmethod
     @abc.abstractmethod
-    def save(cls, array: np.ndarray, relative_loc="", **kwargs) -> NDArray:
+    def save(cls, array: np.ndarray, relative_loc="") -> NDArray:
         """Saves the numpy array and returns an NDArray.
 
         Args:
             array: The array to store.
             relative_loc: If NDArray contains a relative filepath,
                 it is relative to this absolute path.
-            **kwargs: Other arguments.
 
         Returns:
             The metadata explaining where the ndarray is stored.
         """
-        pass
 
     @classmethod
     @abc.abstractmethod
-    def delete(cls, metadata: NDArray, relative_loc="", **kwargs):
+    def delete(cls, metadata: NDArray, relative_loc=""):
         """Deletes the numpy array from the given NDArray.
 
         Args:
             metadata: The NDArray telling you here the np.ndarray is stored.
             relative_loc: If NDArray contains a relative filepath,
                 it is relative to this absolute path.
-            **kwargs: Other arguments.
         """
-        pass
 
 class FileStorage(NDArrayStorage):
     """Stores the ndarray as a raw binary file"""
     code = "f"
     @classmethod
     def get(cls, metadata: NDArray, relative_loc="") -> np.ndarray:
-        md = metadata
-        dtype = np.dtype(md.t)
-        order = "C" if md.c else "F"
+        dtype = np.dtype(metadata.t)
+        order = "C" if metadata.c else "F"
         # relative_loc is the data folder
-        # md.p is either the name of the data, or an absolute path
-        path = os.path.join(relative_loc, md.p)
+        # metadata.p is either the name of the data, or an absolute path
+        path = os.path.join(relative_loc, metadata.p)
         return np.memmap(
             filename=path,
             dtype=dtype,
             mode="c", #  mode="c" is copy-on-write, changes are made in RAM
-            shape=tuple(md.s), # we have to make shape a tuple for numpy
+            shape=tuple(metadata.s), # we have to make shape a tuple for numpy
             order=order)
     @classmethod
     def save(cls, array: np.ndarray, relative_loc="") -> NDArray:
@@ -97,7 +92,7 @@ class FileStorage(NDArrayStorage):
         open_file = tempfile.NamedTemporaryFile(
             delete=False, # do not delete automatically
             dir=relative_loc,
-            prefix=makePrefix(),
+            prefix=make_prefix(),
             suffix=".dat")
 
         # pointer is a relative filepath to the binary matrix file
@@ -107,13 +102,12 @@ class FileStorage(NDArrayStorage):
                 array.tobytes(
                     "C" if array.flags.c_contiguous else "F"))
         return NDArray.from_array(
-            array, pointer=open_file.name, version=cls.code)
+            array, pointer=pointer, version=cls.code)
 
     @classmethod
     def delete(cls, metadata: NDArray, relative_loc=""):
-        md = metadata
-        path = os.path.join(relative_loc, md.p)
-        os.unlink(md.p)
+        path = os.path.join(relative_loc, metadata.p)
+        os.unlink(path)
 
 class Base64Storage(NDArrayStorage):
     """Stores the ndarray as a raw base64 string"""
@@ -162,6 +156,6 @@ class GzippedBase64Storage(Base64Storage):
         ).decode()
         return NDArray.from_array(array, pointer=arrb64, version=cls.code)
 
-storage_types[FileStorage.code] = FileStorage
-storage_types[Base64Storage.code] = Base64Storage
-storage_types[GzippedBase64Storage.code] = GzippedBase64Storage
+STORAGE_TYPES[FileStorage.code] = FileStorage
+STORAGE_TYPES[Base64Storage.code] = Base64Storage
+STORAGE_TYPES[GzippedBase64Storage.code] = GzippedBase64Storage

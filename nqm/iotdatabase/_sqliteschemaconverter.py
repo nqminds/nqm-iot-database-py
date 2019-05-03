@@ -9,8 +9,13 @@ import os
 from . import _sqliteconstants
 from . import ndarray as _ndarray
 
-SQLITE_TYPE = _sqliteconstants.SQLITE_TYPE
-TDX_TYPE = _sqliteconstants.TDX_TYPE
+#TODO: Use snake_case names, instead of following JavaScript API names.
+#pylint: disable=locally-disabled, invalid-name
+
+#pylint: disable=locally-disabled, redefined-builtin
+
+SQLITE_TYPE = _sqliteconstants.SQLITE_TYPE #pylint: disable=invalid-name
+TDX_TYPE = _sqliteconstants.TDX_TYPE #pylint: disable=invalid-name
 
 # types that can be inserted in SQLite
 SQLVal = t.Union[int, float, t.Text, numbers.Real]
@@ -33,16 +38,16 @@ JSONable = t.Union[
 # json.loads could also return a bool but we don't store any
 JSONified = t.Union[int, float, t.List, t.Dict, t.Text, None]
 
-GeneralSchema =  t.Mapping[t.Text, GeneralSQLiteVal]
+GeneralSchema = t.Mapping[t.Text, GeneralSQLiteVal]
 "A SQLite General Schema Object"
 TDXDataSchema = t.Mapping[t.Text, t.Union[t.Mapping, t.Sequence]]
-"A TDX Data Schema Object"
+"""A TDX Data Schema Object. Example: {"prop1": {"__tdxType": ["number"]}
+"""
 TDXSchema = t.NewType("TDXSchema", t.Mapping[t.Text, JSONable])
 "A TDXSchema object."
 
-def getBasicType(tdx_types: t.Sequence[
-    t.Union[TDX_TYPE, t.Text]
-]) -> GeneralSQLiteVal:
+def getBasicType(
+        tdx_types: t.Sequence[t.Union[TDX_TYPE, t.Text]]) -> GeneralSQLiteVal:
     """Returns a general SQLite type from a list of tdx types.
 
     Args:
@@ -62,7 +67,7 @@ def getBasicType(tdx_types: t.Sequence[
         tdx_derived_type = tdx_types[1].upper() if len(tdx_types) > 1 else None
         if tdx_derived_type is None:
             pass
-        elif TDX_TYPE.INT.value in str(tdx_derived_type):
+        elif str(TDX_TYPE.INT) in str(tdx_derived_type):
             return SQLITE_TYPE.INTEGER
         elif TDX_TYPE.REAL.value.match(tdx_derived_type):
             return SQLITE_TYPE.REAL
@@ -81,8 +86,8 @@ def getBasicType(tdx_types: t.Sequence[
     # if the tdx type is not in mapping (ie array/obj), use TEXT by default
     return mapping.get(tdx_base_type, lambda: SQLITE_TYPE.TEXT)()
 
-def _toGeneralSqliteValType(general_sqlite_type: GeneralSQLOrStr
-) -> GeneralSQLiteVal:
+def _toGeneralSqliteValType(
+        general_sqlite_type: GeneralSQLOrStr) -> GeneralSQLiteVal:
     """Converts a string to the enum types.
 
     Enums are better than strings since types and error messages.
@@ -97,34 +102,36 @@ def _mapVal(type: GeneralSQLOrStr) -> SQLITE_TYPE:
     enum_type = _toGeneralSqliteValType(type)
     if isinstance(enum_type, _sqliteconstants.SQLITE_GENERAL_TYPE):
         return SQLITE_TYPE.TEXT # arrays and objects are jsonified
-    else:
-        return enum_type
 
-def mapSchema(types: t.Mapping[t.Text, GeneralSQLOrStr]
+    return enum_type
+
+def mapSchema(
+        types: t.Mapping[t.Text, GeneralSQLOrStr],
 ) -> t.Dict[t.Text, SQLITE_TYPE]:
     """Maps a general sqlite schema type into a valid sqlite schema.
 
     Args:
         types: The general sqlite schema type
-    
+
     Returns:
         The mapped valid sqlite schema
     """
     return {name: _mapVal(val) for name, val in types.items()}
 
-def _convertSchemaOne(value: t.Union[t.Sequence, t.Mapping]
-) -> GeneralSQLiteVal:
+def _convertSchemaOne(
+        value: t.Union[t.Sequence, t.Mapping]) -> GeneralSQLiteVal:
     """Used in convertSchema"""
     # I don't actually understand what this does, I just ported
     # it from @mereacre's code (🇲🇩 🧛 🔮 Moldovan Vampyre Magick)
     if isinstance(value, collections.Sequence):
         return _sqliteconstants.SQLITE_GENERAL_TYPE.ARRAY
-    elif isinstance(value, collections.Mapping):
+    if isinstance(value, collections.Mapping):
         real_type = value.get(str(TDX_TYPE.NAME), None)
         if real_type is not None:
             return getBasicType(real_type)
-        else:
-            return _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT
+        return _sqliteconstants.SQLITE_GENERAL_TYPE.OBJECT
+    raise TypeError(
+        f"type(value)={type(value)} should be a Sequence or Mapping.")
 
 def convertSchema(schema: TDXDataSchema) -> GeneralSchema:
     """Converts a tdx data schema into a sqlite schema.
@@ -132,10 +139,10 @@ def convertSchema(schema: TDXDataSchema) -> GeneralSchema:
     return {name: _convertSchemaOne(val) for name, val in schema.items()}
 
 def convertRowToSqlite(
-    schema: GeneralSchema,
-    row: t.Mapping[t.Text, t.Any],
-    throwOnExtraKeys: bool = False,
-    data_dir: t.Union[t.Text, os.PathLike] = "",
+        schema: GeneralSchema,
+        row: t.Mapping[t.Text, t.Any],
+        throwOnExtraKeys: bool = False,
+        data_dir: t.Union[t.Text, os.PathLike] = "",
 ) -> t.Mapping[t.Text, SQLVal]:
     """Converts a Python row to a row for SQLite insertion.
 
@@ -145,6 +152,8 @@ def convertRowToSqlite(
         throwOnExtraKeys:
             Set to `True` to throw an error if row has keys that are not
             specified in the `schema`.
+            For example, adding {"color": 1} will throw if the schema
+            is expected {"colour": 1}.
         data_dir:
             The directory to store additional data. Used when saving ndarrays.
 
@@ -155,14 +164,9 @@ def convertRowToSqlite(
     sqlite_type = None
     for col, val in row.items():
         try:
-            # in the Javascript API, if you try to insert {"color": 1}
-            # but the schema has {"colour": 1}, you will get NO ERROR.
-            # TODO: Add warning here.
             sqlite_type = schema[col]
         except KeyError:
-            if not throwOnExtraKeys:
-                continue
-            else:
+            if throwOnExtraKeys:
                 raise KeyError(
                     f"Key {col} could not be found within the schema keys:"
                     f" {schema.keys()}")
@@ -170,10 +174,10 @@ def convertRowToSqlite(
     return converted_row
 
 def convertToSqlite(
-    type: GeneralSQLOrStr,
-    value: t.Any,
-    only_stringify: bool = False,
-    data_dir: t.Union[t.Text, os.PathLike] = "",
+        type: GeneralSQLOrStr,
+        value: t.Any,
+        only_stringify: bool = False,
+        data_dir: t.Union[t.Text, os.PathLike] = "",
 ) -> SQLVal:
     """Converts a tdx value to a sqlite value based on a sqlite type.
 
@@ -207,9 +211,7 @@ def convertToSqlite(
         return to_text(json.dumps(value))
 
     def ndarray(array):
-        return _ndarray.saveNDArray(
-            array,
-            relative_loc = data_dir).tojson()
+        return _ndarray.saveNDArray(array, relative_loc=data_dir).tojson()
 
     # map of types to funcs that covert from that type
     converter: t.Dict[GeneralSQLiteVal, t.Callable] = {
@@ -225,9 +227,9 @@ def convertToSqlite(
     return converter[fixed_type](value) # type: ignore
 
 def convertRowToTdx(
-    schema: GeneralSchema,
-    row: t.Mapping[t.Text, SQLVal],
-    data_dir: t.Union[t.Text, os.PathLike] = "",
+        schema: GeneralSchema,
+        row: t.Mapping[t.Text, SQLVal],
+        data_dir: t.Union[t.Text, os.PathLike] = "",
 ) -> t.Mapping[t.Text, JSONified]:
     """Converts an sqlite row to a tdx row based on the tdx schema.
 
@@ -248,9 +250,9 @@ def convertRowToTdx(
         for col, val in row.items() if col in schema}
 
 def convertToTdx(
-    type: GeneralSQLOrStr,
-    value: t.Text,
-    data_dir: t.Union[t.Text, os.PathLike] = "",
+        type: GeneralSQLOrStr,
+        value: t.Text,
+        data_dir: t.Union[t.Text, os.PathLike] = "",
 ) -> JSONified:
     """Converts a sqlite value to a tdx value based on a sqlite type.
 
@@ -259,7 +261,7 @@ def convertToTdx(
         value: SQLite value to convert from
         data_dir:
             The directory to store additional data. Used when saving ndarrays.
-    
+
     Returns:
         The converted value.
     """

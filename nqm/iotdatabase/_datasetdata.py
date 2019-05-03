@@ -2,6 +2,10 @@
 import typing
 import collections
 
+# ignore too-many-ancestors. We inherit from MutableMapping, which has tons.
+# ignore invalid-name. We are copying the name from the JavaScript API.
+#pylint: disable=locally-disabled, too-many-ancestors, invalid-name
+
 class Object(collections.MutableMapping):
     """An ``dict`` that can be used like a JavaScript object with dot notation
 

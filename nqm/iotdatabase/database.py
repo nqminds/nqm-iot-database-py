@@ -47,6 +47,7 @@ class Database(object):
         tdx_data_schema: The `tdx_data_schema` for the data.
         data_dir:
             The location of the data directory (for saving ndarrays to file)
+        path_to_db: The location of the underlying SQLite file.
         session_maker:
             Used to create an :class:`sqlalchemy.orm.session.Session` for
             querying data.
@@ -58,6 +59,7 @@ class Database(object):
     tdx_schema: schemaconverter.TDXSchema = TDXSchema(dict())
     tdx_data_schema: schemaconverter.TDXDataSchema = dict()
     data_dir: t.Union[t.Text, os.PathLike] = ""
+    path_to_db: os.PathLike = None
     session_maker: t.Callable[[], sqlalchemy.orm.session.Session] = None
 
     def __init__(self,
@@ -120,40 +122,41 @@ class Database(object):
             The id of the dataset.
         """
         id = shortuuid.uuid() if id is None else id
-        db = self.sqlEngine
+        db_engine = self.sqlEngine
 
         copiedTDXSchema = dict(schema.items())
 
         copiedTDXSchema.setdefault("dataSchema", {})
         copiedTDXSchema.setdefault("uniqueIndex", {})
 
-        tdxSchema = TDXSchema(copiedTDXSchema)
+        tdx_schema = TDXSchema(copiedTDXSchema)
 
-        if not tdxSchema["dataSchema"] and tdxSchema["uniqueIndex"]:
+        if not tdx_schema["dataSchema"] and tdx_schema["uniqueIndex"]:
             raise ValueError(("schema.dataSchema was empty, but"
                     " schema.uniqueIndex has a non.empty value of {}"
-                ).format(tdxSchema["uniqueIndex"]))
+                ).format(tdx_schema["uniqueIndex"]))
 
         # convert the TDX schema to an SQLite schema and save it
         self.general_schema = schemaconverter.convertSchema(
-            t.cast(schemaconverter.TDXDataSchema, tdxSchema["dataSchema"]))
+            t.cast(schemaconverter.TDXDataSchema, tdx_schema["dataSchema"]))
 
-        if _sqliteinfotable.checkInfoTable(db):
+        if _sqliteinfotable.checkInfoTable(db_engine):
             # check if old id exists
-            infovals = _sqliteinfotable.getInfoKeys(db, ["id"], self.session_maker)
+            infovals = _sqliteinfotable.getInfoKeys(
+                db_engine, ["id"], self.session_maker)
             # use the original id if we can find it
             id = str(infovals.get("id", id))
 
             # will raise an error if the schemas aren't compatible
-            self.compatibleSchema(TDXSchema(tdxSchema), raise_error=True)
+            self.compatibleSchema(TDXSchema(tdx_schema), raise_error=True)
         else:
             # create infotable
-            _sqliteinfotable.createInfoTable(db)
+            _sqliteinfotable.createInfoTable(db_engine)
             info = kargs
-            info[SCHEMA_KEY] = tdxSchema
+            info[SCHEMA_KEY] = tdx_schema
             info["id"] = id
             
-            _sqliteinfotable.setInfoKeys(db, info)
+            _sqliteinfotable.setInfoKeys(db_engine, info)
 
         self._load_tdx_schema()
 
@@ -164,8 +167,13 @@ class Database(object):
             return id
 
         self.table_model = alchemyconverter.makeDataModel(
-            db, sqlite_schema, tdxSchema)
-        self.table = self.table_model.__table__
+            db_engine, sqlite_schema, tdx_schema)
+
+        def get_table():
+            #pylint: disable=local-disable, no-member
+            return self.table_model.__table__
+
+        self.table = get_table()
         self.table.create(self.sqlEngine,  checkfirst=True) # create unless already exists
 
         return id
@@ -182,13 +190,13 @@ class Database(object):
             type: The type of the db: `"file"` or `"memory"`
             mode: The open mode of the db: `"w+"`, `"rw"`, or `"r"`
         """
-        path_to_db = pathlib.Path(path)
+        self.path_to_db = pathlib.Path(path)
 
-        typeEnum = DbTypeEnum(type)
-        if typeEnum is DbTypeEnum.file:
+        type_enum = DbTypeEnum(type)
+        if type_enum is DbTypeEnum.file:
             # makes the directory the sqlite db is in
             os.makedirs(os.path.dirname(path), exist_ok=True)
-            self.data_dir = path_to_db.with_suffix(
+            self.data_dir = self.path_to_db.with_suffix(
                 str(_sqliteconstants.DATABASE.DATA_FOLDER_SUFFIX))
         else: # in-memory db
             # autodeleted when self is deleted
@@ -197,11 +205,15 @@ class Database(object):
 
         os.makedirs(self.data_dir, exist_ok=True) # makes the data folder
 
-        uri = _sqliteutils.sqlAlchemyURL(path_to_db, typeEnum, mode)
+        creator = _sqliteutils.sqlAlchemyEngineCreator(
+            self.path_to_db, type_enum, mode)
         # creates the sqlite3 connection
-        self.sqlEngine = sqlalchemy.create_engine(uri)
+        # see https://github.com/pudo/dataset/issues/136 for why we do this
+        self.sqlEngine = sqlalchemy.create_engine(
+            "sqlite:///", creator=creator)
 
         session_factory = sqlalchemy.orm.sessionmaker(bind=self.sqlEngine)
+        # TODO: Replace session_maker with @contextlib.contextmanager format
         self.session_maker = sqlalchemy.orm.scoped_session(session_factory)
 
         # check to see if this is an already created database
@@ -247,10 +259,13 @@ class Database(object):
 
     def _convertDataToSQLite(self, data: TDXData
     ) -> t.Iterable[t.Mapping[t.Text, schemaconverter.SQLVal]]:
-        """Converts the given TDX Data to SQLite Data
+        """Converts the given TDX Data to SQLite Data.
+
+        TDX Data is a list of dicts of Python objects.
+        SQLite Data is a list of dicts of JSON-strings.
 
         Args:
-            data: The list of TDX Data Rows
+            data: The list of TDX Data Rows.
         Returns:
             A list of SQL data rows.
         """
@@ -258,10 +273,11 @@ class Database(object):
         general_schema = self.general_schema
 
         # convert all the data to SQLite types
-        convertRow = schemaconverter.convertRowToSqlite
-        sqlData = [
-            convertRow(general_schema, r, data_dir=self.data_dir) for r in data]
-        return sqlData
+        convert_row = schemaconverter.convertRowToSqlite
+        sql_data = [
+            convert_row(general_schema, r, data_dir=self.data_dir)
+            for r in data]
+        return sql_data
 
     def _convertFilterToSQLite(self, mongofilter: t.Mapping[t.Text, t.Any]
     ) -> t.Mapping[t.Text, t.Any]:
@@ -299,13 +315,15 @@ class Database(object):
             TDX_TYPE.BOOLEAN, TDX_TYPE.DATE, TDX_TYPE.STRING, TDX_TYPE.NUMBER}
         banned_types = {TDX_TYPE.NDARRAY}
 
+        # convert ugly TDX Data Schema to Map of Column to Type.
+        # might need to be changed in the future for new TDX dataschema schema
         dataschema: t.Dict[t.Text, TDX_TYPE] = {}
-        for f, v in self.tdx_data_schema.items():
-            if isinstance(v, collections.Mapping):
-                dataschema[f] = TDX_TYPE(
-                    v.get("__tdxType", [TDX_TYPE.OBJECT])[0])
-            elif isinstance(v, collections.Sequence):
-                dataschema[f] =  TDX_TYPE.ARRAY
+        for column, column_type in self.tdx_data_schema.items():
+            if isinstance(column_type, collections.Mapping):
+                dataschema[column] = TDX_TYPE(
+                    column_type.get("__tdxType", [TDX_TYPE.OBJECT])[0])
+            elif isinstance(column_type, collections.Sequence):
+                dataschema[column] =  TDX_TYPE.ARRAY
 
         for field, val in mongofilter.items():
             tdx_type = dataschema[field]
@@ -403,8 +421,10 @@ class Database(object):
             >>> datasetData.data == [{"a": 2}]
             True
         """
-        session = self.session_maker()
-        DataModel = self.table_model
+        if options.get("nqmMeta", False):
+            raise NotImplementedError(
+                "Setting options.nqmMeta to True is not implemented yet.")
+
         valid_query_opt = {"limit", "skip", "sort"} # opts to pass to mongosql
         query_opts = {k: options[k] for k in options if k in valid_query_opt}
         # raise Error if invalid options are given
@@ -428,11 +448,12 @@ class Database(object):
                     "option.")
 
         # convert dict/array types to JSON
-        mongosql_filter=self._convertFilterToSQLite(filter)
+        mongosql_filter = self._convertFilterToSQLite(filter)
 
+        session = self.session_maker()
         mongoquery = mongosql.MongoQuery.get_for(
-            DataModel,
-            session.query(DataModel),
+            self.table_model,
+            session.query(self.table_model),
         ).query(
             filter=mongosql_filter, project=projection, **query_opts,
         ).end()
@@ -443,7 +464,7 @@ class Database(object):
 
         # TODO: MongoSQL's projection operator doesn't work correctly.
         # we should fix it instead of using this hack
-        noproject = set([x for x, v in projection.items() if v == 0])
+        noproject = set(x for x, v in projection.items() if v == 0)
         projected_data = [
             {x: a for x, a in row.__dict__.items() if x not in noproject}
             for row in mongoquery.all()
@@ -453,11 +474,8 @@ class Database(object):
 
         data = [schemaconverter.convertRowToTdx(
             schema, row, data_dir) for row in projected_data]
-        if options.get("nqmMeta", False):
-            raise NotImplementedError(
-                "Setting options.nqmMeta to True is not implemented yet.")
-        else:
-            return DatasetData(data=data)
+
+        return DatasetData(data=data)
 
     def getAggregateData(self, pipeline: t.Mapping[t.Text, t.Any],
         filter: t.Mapping[t.Text, t.Any] = {},
@@ -504,6 +522,8 @@ class Database(object):
         schema = self.general_schema
         data_dir = self.data_dir
 
+        #TODO: Make sure this is tested (above vars are unused, why?)
+
         data = [row._asdict() for row in mongoquery.all()]
 
         # close the ORM session when done
@@ -536,11 +556,11 @@ class Database(object):
             >>> datasetCount.count == sum(1 for a in range(3) if a <= 2)
             True
         """
-        aggData = self.getAggregateData(
+        aggregate_data = self.getAggregateData(
             pipeline={"count": {"$sum": 1}},
-            filter=filter
+            filter=filter,
         )
-        count = aggData.data[0]["count"]
+        count = aggregate_data.data[0]["count"]
         return DatasetCount(count=count)
 
     def getResource(self) -> MetaData:
