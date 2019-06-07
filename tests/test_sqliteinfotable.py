@@ -10,14 +10,6 @@ import json
 import itertools
 import functools
 
-def test_sqlAlchemyEngineCreator():
-    import nqm.iotdatabase._sqliteutils as sqliteutils
-    with pytest.raises(TypeError):
-        creator = sqliteutils.sqlAlchemyEngineCreator(
-            "", type="file", mode="w+")
-        pytest.fail(
-            "Was expecting invalid path sqlAlchemyEngineCreator to fail")
-
 @pytest.fixture
 def in_mem_db():
     """Returns a new rwc in-memory SQLite SQLAlchemy connection"""
