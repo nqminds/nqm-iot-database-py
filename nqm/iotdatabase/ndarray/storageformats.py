@@ -80,12 +80,22 @@ class FileStorage(NDArrayStorage):
         # relative_loc is the data folder
         # metadata.p is either the name of the data, or an absolute path
         path = os.path.join(relative_loc, metadata.p)
-        return np.memmap(
-            filename=path,
-            dtype=dtype,
-            mode="c", #  mode="c" is copy-on-write, changes are made in RAM
-            shape=tuple(metadata.s), # we have to make shape a tuple for numpy
-            order=order)
+        try:
+            return np.memmap(
+                filename=path,
+                dtype=dtype,
+                mode="c", #  mode="c" is copy-on-write, changes are made in RAM
+                shape=tuple(metadata.s), # we have to make shape a tuple for np
+                order=order)
+        except OSError as e:
+            if e.errno == 24: # too many files open
+                raise OSError(24, ("Could not open file: too many files open. "
+                    "You should get less entries at a time, or increase your "
+                    "`ulimit -n` by typing in `ulimit -n $NEWLIMIT`. "
+                    "The new limit should be at least 2.5x the amount of data "
+                    "you want to get an once."),
+                    filename=path) from e
+            raise e
     @classmethod
     def save(cls, array: np.ndarray, relative_loc="") -> NDArray:
         # make pseudo-random filename
