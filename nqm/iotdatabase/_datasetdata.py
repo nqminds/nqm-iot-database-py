@@ -1,12 +1,12 @@
 """Stores data about a dataset"""
 import typing
-import collections
+import collections.abc
 
 # ignore too-many-ancestors. We inherit from MutableMapping, which has tons.
 # ignore invalid-name. We are copying the name from the JavaScript API.
 #pylint: disable=locally-disabled, too-many-ancestors, invalid-name
 
-class Object(collections.MutableMapping):
+class Object(collections.abc.MutableMapping):
     """An ``dict`` that can be used like a JavaScript object with dot notation
 
     Example:

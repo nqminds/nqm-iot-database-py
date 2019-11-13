@@ -8,6 +8,7 @@ import pathlib
 import os
 import tempfile # used for in-memory dbs
 import collections
+import collections.abc
 import warnings
 
 import sqlalchemy
@@ -319,10 +320,10 @@ class Database(object):
         # might need to be changed in the future for new TDX dataschema schema
         dataschema: t.Dict[t.Text, TDX_TYPE] = {}
         for column, column_type in self.tdx_data_schema.items():
-            if isinstance(column_type, collections.Mapping):
+            if isinstance(column_type, collections.abc.Mapping):
                 dataschema[column] = TDX_TYPE(
                     column_type.get("__tdxType", [TDX_TYPE.OBJECT])[0])
-            elif isinstance(column_type, collections.Sequence):
+            elif isinstance(column_type, collections.abc.Sequence):
                 dataschema[column] =  TDX_TYPE.ARRAY
 
         for field, val in mongofilter.items():
