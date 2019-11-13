@@ -66,7 +66,7 @@ def getInfoKeys(
         filterquery = {} # get all keys
 
     query = Info.mongoquery(session.query(Info.key, Info.value)
-        ).filter(filterquery).end()
+        ).query(filter=filterquery).end()
 
     results = {
         key: schemaconverter.convertToTdx(SQLITE_OBJ, str(val))

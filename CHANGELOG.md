@@ -16,6 +16,6 @@ and this project adheres to
 ### Misc
 
 - Changed package dependecy manager from `pipenv` to `poetry`
-- Specify `mongosql` version as v1.5.5
+- Update `monogsql` version to v2
 - Update dependecies
 - Cleaned up tests

@@ -13,11 +13,11 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.6"
-sqlalchemy = ">= 0.9.7, <= 1.2.18"
 shortuuid = "^0.5.0"
 numpy = "^1.17.4"
-mongosql = {git = "https://github.com/kolypto/py-mongosql", tag = "v1.5.5"}
 future = "^0.18.2"
+mongosql = "^2.0.8"
+sqlalchemy = "^1.3.11"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2.2"

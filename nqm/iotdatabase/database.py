@@ -85,6 +85,7 @@ class Database(object):
     data_dir: t.Union[t.Text, os.PathLike] = ""
     path_to_db: os.PathLike
     session_maker: sqlalchemy.orm.scoped_session
+    _mongosql_config: dict
 
     def __init__(self,
         path: t.Union[t.Text, os.PathLike],
@@ -190,6 +191,14 @@ class Database(object):
         if not sqlite_schema:
             # TODO Maybe add error (none now matches nqm-iot-database-utils)
             return id
+
+        self._mongosql_config = dict(
+            default_projection=None,
+            default_exclude=[],
+            default_exclude_properties=False,
+            # allow aggregation on all columns
+            aggregate_columns=sqlite_schema.keys(),
+        )
 
         self.table_model = alchemyconverter.makeDataModel(
             db_engine, sqlite_schema, tdx_schema)
@@ -413,6 +422,13 @@ class Database(object):
 
         return t.cast(AddDataResult, {"count": len(sqlData)})
 
+    def _mongo_query(self, session) -> mongosql.MongoQuery:
+        return mongosql.MongoQuery(
+            self.table_model, self._mongosql_config,
+        ).from_query(
+            session.query(self.table_model)
+        )
+
     def getData(self,
         filter: t.Mapping[t.Text, t.Any] = {},
         projection: t.Mapping[t.Text, int] = {},
@@ -478,11 +494,13 @@ class Database(object):
 
         session = self.session_maker()
 
-        mongoquery = mongosql.MongoQuery(
-            self.table_model,
-            session.query(self.table_model),
-        ).query(
-            filter=mongosql_filter, project=projection, **query_opts,
+        mongosql_projection = projection
+        if not projection:
+            # in mongosql, an empty projection means don't return anything
+            mongosql_projection = None
+
+        mongoquery = self._mongo_query(session).query(
+            filter=mongosql_filter, project=mongosql_projection, **query_opts,
         ).end()
 
         schema = self.general_schema
@@ -536,12 +554,8 @@ class Database(object):
             True
         """
         session = self.session_maker()
-        DataModel = self.table_model
 
-        mongoquery = mongosql.MongoQuery(
-            DataModel,
-            session.query(DataModel),
-        ).query(
+        mongoquery = self._mongo_query(session).query(
             filter=filter,
             aggregate=pipeline,
         ).end()
