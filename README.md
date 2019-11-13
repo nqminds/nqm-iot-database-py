@@ -10,14 +10,12 @@ Python port of
 Use the below to install as a library using `pip`:
 
 ```bash
-# py-mongosql on pypi does not support Python3
-pip3 install git+https://github.com/dignio/py-mongosql#egg=mongosql
 pip3 install nqm.iotdatabase
 # installing the latest git version:
 # pip3 install git+https://github.com/nqminds/nqm-iot-database-py.git#egg=nqm.iotdatabase
 ```
 
-You can replace `pip3` with `pipenv` if you prefer.
+You can replace `pip3` with `poetry` if you prefer.
 
 To download the library, install dependencies for running tests, and build
 documentation, do:
@@ -25,7 +23,7 @@ documentation, do:
 ```bash
 git clone https://github.com/nqminds/nqm-iot-database-py.git
 cd nqm-iot-database-py/
-pipenv --python 3 install --dev
+poetry install
 ```
 
 ## Documentation
@@ -37,7 +35,7 @@ to make our documentation.
 The below creates html.
 
 ```bash
-pipenv run make html
+poetry run make html
 ```
 
 ## Tests
@@ -45,31 +43,31 @@ pipenv run make html
 ### Unittests
 
 ```bash
-pipenv run python -m pytest
+poetry run python -m pytest
 ```
 
 ### Unittests Coverage
 
 ```bash
-pipenv run coverage run --source=nqm -m pytest && pipenv run coverage report
+poetry run coverage run --source=nqm -m pytest && poetry run coverage report
 ```
 
 ### Typetests
 
 ```bash
-pipenv run mypy -m nqm.iotdatabase && echo -e "\e[1;32mPass! \e[0m"
+poetry run mypy -m nqm.iotdatabase && echo -e "\e[1;32mPass! \e[0m"
 ```
 
 ### Doctests
 
 ```bash
-pipenv run make doctest
+poetry run make doctest
 ```
 
 ### Linting
 
 ```bash
-pipenv run pylint nqm
+poetry run pylint nqm
 ```
 
 ## Possible upgrades to make in SQLAlchemy
