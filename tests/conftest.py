@@ -71,4 +71,3 @@ def _make_data(schema, number=100):
 @pytest.fixture(scope="session")
 def make_data():
     return _make_data
-

@@ -69,7 +69,7 @@ def getInfoKeys(
         ).filter(filterquery).end()
 
     results = {
-        key: schemaconverter.convertToTdx(SQLITE_OBJ, str(val)) 
+        key: schemaconverter.convertToTdx(SQLITE_OBJ, str(val))
         for key, val in query.all()}
 
     session.close()
