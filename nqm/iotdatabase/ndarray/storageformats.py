@@ -25,11 +25,9 @@ def make_prefix() -> typing.Text:
     unix_bytes = unix_time_ms.to_bytes(8, byteorder="big")
     return base64.urlsafe_b64encode(unix_bytes).decode("ascii")
 
-STORAGE_TYPES = {}
 class NDArrayStorage(abc.ABC):
     """Abstract Base Class for classes that save/load NDArrays.
     """
-    storage_types = STORAGE_TYPES
 
     @classmethod
     @abc.abstractmethod
@@ -69,6 +67,8 @@ class NDArrayStorage(abc.ABC):
             relative_loc: If NDArray contains a relative filepath,
                 it is relative to this absolute path.
         """
+
+STORAGE_TYPES: typing.Dict[str, typing.Type[NDArrayStorage]] = {}
 
 class FileStorage(NDArrayStorage):
     """Stores the ndarray as a raw binary file"""

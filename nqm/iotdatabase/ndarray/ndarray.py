@@ -37,6 +37,8 @@ def basictypestring(
     byteorderchar = byteorder if byteorder not in ("=", "|") else ""
     return f"{byteorderchar}{dtype_char}{lengthstr}"
 
+# Create a generic variable that can be 'NDArray', or any subclass.
+T = ty.TypeVar('T', bound="NDArray")
 class NDArray():
     """The metadata of an NDArray.
 
@@ -64,7 +66,7 @@ class NDArray():
     """typestr, basic string format is endian, type, byte size.
         ie ``>i8`` is an 8-bit signed big-endian int. See
         https://docs.scipy.org/doc/devdocs/reference/arrays.interface.html#typestr"""
-    s: ty.Iterable[int] = tuple()
+    s: ty.Tuple[int, ...] = tuple()
     """the shape of the array, a :any:`list` of dimensions,
     ie ``[10, 10]`` for a 10 by 10 array."""
     v: ty.Text
@@ -77,7 +79,9 @@ class NDArray():
         ``False`` if using Fortran ordering"""
 
     @classmethod
-    def from_array(cls, array: np.ndarray, pointer: ty.Text, version: ty.Text):
+    def from_array(
+        cls: ty.Type[T], array: np.ndarray, pointer: ty.Text, version: ty.Text,
+    ) -> T:
         """Creates an NDArray fron a numpy array.
 
         Args:
@@ -99,7 +103,7 @@ class NDArray():
     def __init__(
             self,
             t: ty.Text = "V", # void data type
-            s: ty.Iterable[int] = tuple(), # no dimensions
+            s: ty.Tuple[int, ...] = tuple(), # no dimensions
             v: ty.Text = "", # assume no version
             p: ty.Text = "", # assume no pointer
             c: bool = True, # column order, True for c-type column ordering

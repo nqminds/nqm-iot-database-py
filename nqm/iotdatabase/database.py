@@ -10,6 +10,7 @@ import tempfile # used for in-memory dbs
 import collections
 import collections.abc
 import warnings
+import json
 
 import sqlalchemy
 import sqlalchemy.engine
@@ -33,6 +34,28 @@ DbTypeEnum = _sqliteutils.DbTypeEnum
 TDXSchema = schemaconverter.TDXSchema
 AddDataResult = t.NewType("AddDataResult", dict)
 TDXData = t.Iterable[t.Mapping[t.Text, t.Any]]
+
+T = t.TypeVar("T") # generic type
+def first(iterable: t.Iterable[T]) -> T:
+    """Returns the first value of an iterable"""
+    return next(iter(iterable))
+
+def check_tdx_schema_valid(tdx_schema: t.Any) -> TDXSchema:
+    try:
+        assert isinstance(tdx_schema, collections.abc.MutableMapping)
+        for key in tdx_schema:
+            assert isinstance(key, str) or isinstance(key, bytes)
+    except AssertionError as e:
+        raise AssertionError(
+            f"Expected tdx schema {tdx_schema} to be a "
+            "MutableMapping with text keys"
+        ) from e
+    try:
+        json.dumps(tdx_schema)
+    except (TypeError, OverflowError) as e:
+        raise AssertionError(
+            f"Expected tdx schema {tdx_schema} to be JSONable") from e
+    return t.cast(TDXSchema, tdx_schema)
 
 class Database(object):
     """An instance of an NQM InterliNQ Database.
@@ -60,8 +83,8 @@ class Database(object):
     tdx_schema: schemaconverter.TDXSchema = TDXSchema(dict())
     tdx_data_schema: schemaconverter.TDXDataSchema = dict()
     data_dir: t.Union[t.Text, os.PathLike] = ""
-    path_to_db: os.PathLike = None
-    session_maker: t.Callable[[], sqlalchemy.orm.session.Session] = None
+    path_to_db: os.PathLike
+    session_maker: sqlalchemy.orm.scoped_session
 
     def __init__(self,
         path: t.Union[t.Text, os.PathLike],
@@ -143,6 +166,7 @@ class Database(object):
 
         if _sqliteinfotable.checkInfoTable(db_engine):
             # check if old id exists
+            self.session_maker
             infovals = _sqliteinfotable.getInfoKeys(
                 db_engine, ["id"], self.session_maker)
             # use the original id if we can find it
@@ -224,8 +248,9 @@ class Database(object):
                 self.sqlEngine, ["id", SCHEMA_KEY], self.session_maker)
             # use the original id if we can find it
             id = str(infovals.get("id"))
-            schema = infovals.get(SCHEMA_KEY, None)
-            self.createDatabase(id=id, schema=schema)
+            loaded_tdx_schema = infovals.get(SCHEMA_KEY, None)
+            tdx_schema = check_tdx_schema_valid(loaded_tdx_schema)
+            self.createDatabase(id=id, schema=tdx_schema)
 
         return self
 
@@ -259,7 +284,7 @@ class Database(object):
         return is_subset
 
     def _convertDataToSQLite(self, data: TDXData
-    ) -> t.Iterable[t.Mapping[t.Text, schemaconverter.SQLVal]]:
+    ) -> t.Sequence[t.Mapping[t.Text, schemaconverter.SQLVal]]:
         """Converts the given TDX Data to SQLite Data.
 
         TDX Data is a list of dicts of Python objects.
@@ -452,6 +477,7 @@ class Database(object):
         mongosql_filter = self._convertFilterToSQLite(filter)
 
         session = self.session_maker()
+
         mongoquery = mongosql.MongoQuery(
             self.table_model,
             session.query(self.table_model),
@@ -561,7 +587,7 @@ class Database(object):
             pipeline={"count": {"$sum": 1}},
             filter=filter,
         )
-        count = aggregate_data.data[0]["count"]
+        count = first(aggregate_data.data)["count"]
         return DatasetCount(count=count)
 
     def getResource(self) -> MetaData:
