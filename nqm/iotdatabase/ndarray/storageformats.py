@@ -94,7 +94,7 @@ class FileStorage(NDArrayStorage):
                     "`ulimit -n` by typing in `ulimit -n $NEWLIMIT`. "
                     "The new limit should be at least 2.5x the amount of data "
                     "you want to get an once."),
-                    filename=path) from e
+                    path) from e
             raise e
     @classmethod
     def save(cls, array: np.ndarray, relative_loc="") -> NDArray:
