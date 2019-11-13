@@ -75,7 +75,7 @@ def makeIndexArg(
 def makeIndexes(
     columns: t.Mapping[t.Text, sqlalchemy.sql.expression.ColumnElement],
     tdx_schema: schemaconverter.TDXSchema
-) -> t._NoReturn:
+) -> None:
     """Makes the unique and non-unique indexes for a inplace.
 
     Args:
