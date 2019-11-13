@@ -59,16 +59,14 @@ def test_getlimitdata(dataDb):
         loadedData = db.getData(options={"limit": limit}).data
         assert len(loadedData) == len(data)
 
-def test_getsorteddata(dataDb, row_equal):
+def test_getsorteddata(dataDb, data_equal):
     db, data, key = dataDb
     for sort in +1, -1:
         sortedData = sorted(data,
             key=lambda row: row[key],
             reverse=sort == -1)
         sortedSavedData = db.getData(options={"sort": {key: sort}}).data
-        assert len(sortedData) == len(sortedSavedData)
-        for i in range(len(sortedData)):
-            row_equal(sortedData[i], sortedSavedData[i])
+        data_equal(sortedSavedData, sortedData)
 
 def test_invalidoption(dataDb):
     db, data, key = dataDb
@@ -91,7 +89,7 @@ def filterfunc_mongofilter(request):
     return request.param
 
 @pytest.mark.dependency()
-def test_getqueryopts(dataDb, row_equal, filterfunc_mongofilter):
+def test_getqueryopts(dataDb, data_equal, filterfunc_mongofilter):
     db, data, key = dataDb
 
     limit_val = DEFAULT_LIMIT
@@ -103,12 +101,11 @@ def test_getqueryopts(dataDb, row_equal, filterfunc_mongofilter):
         filter={key: mongofilter},
         options={"sort": {key: 1}, "limit": limit_val}).data
     filteredData = filter(lambda x: filterfunc(x[key]), sortedData)
-    expectedData = tuple(limit(filteredData, limit_val))
-    for row, getDataRow in zip(savedData, expectedData):
-        row_equal(row, getDataRow)
+    expectedData = limit(filteredData, limit_val)
+    data_equal(savedData, expectedData)
 
 @pytest.mark.dependency(depends=["test_getqueryopts"])
-def test_getqueryopts_skip(dataDb, row_equal, filterfunc_mongofilter):
+def test_getqueryopts_skip(dataDb, data_equal, filterfunc_mongofilter):
     db, data, key = dataDb
 
     limit_val = DEFAULT_LIMIT
@@ -122,16 +119,12 @@ def test_getqueryopts_skip(dataDb, row_equal, filterfunc_mongofilter):
             options={
                 "sort": {key: 1}, "skip": skip_val, "limit": limit_val
             }).data
-        filteredData = tuple(limit(skip(
+        filteredData = limit(skip(
             filter(lambda x: filterfunc(x[key]), sortedData),
             skip_val,
-        ), limit_val))
+        ), limit_val)
 
-        assert len(savedData) == len(filteredData)
-        for row, getDataRow in zip(
-            savedData, filteredData
-        ):
-            row_equal(row, getDataRow)
+        data_equal(savedData, filteredData)
 
 @pytest.mark.dependency(depends=["test_getqueryopts"])
 def test_getlogicalquery(dataDb, row_equal):
