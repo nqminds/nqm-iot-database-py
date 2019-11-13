@@ -140,22 +140,22 @@ class FilterFactory(typing.NamedTuple):
 
 logical_filter_factories = [FilterFactory(maker) for maker in [
     lambda key: Filter(
-        lambda x: x[key] > 12 and x[key] <= 26,
+        lambda x: bool(x[key] > 12 and x[key] <= 26),
         {"$and": [{key: {"$gt": 12}}, {key: {"$lte": 26}}]},
     ),
     lambda key: Filter(
-        lambda x: x[key] < 12 or x[key] > 95,
+        lambda x: bool(x[key] < 12 or x[key] > 95),
         {"$or": [{key: {"$lt": 12}}, {key: {"$gt": 95}}]},
     ),
     lambda key: Filter(
-        lambda x: x[key] < 12 and not x[key] < 6,
+        lambda x: bool(x[key] < 12 and not x[key] < 6),
         {"$and": [{key: {"$lt": 12}}, {"$not": {key: {"$lt": 6}}}]},
     ),
 ]]
 
 @pytest.fixture(params=logical_filter_factories)
 def logical_filter_factory(request) -> FilterFactory:
-    return request.param
+    return typing.cast(FilterFactory, request.param)
 
 @pytest.mark.dependency(depends=["test_getqueryopts"])
 def test_getlogicalquery(dataDb, data_equal, logical_filter_factory):

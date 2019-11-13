@@ -112,7 +112,7 @@ htmlhelp_basename = 'nqm-iot-database-utils-pythondoc'
 
 # -- Options for LaTeX output ------------------------------------------------
 
-latex_elements = {
+latex_elements: dict = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
