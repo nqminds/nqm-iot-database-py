@@ -1,8 +1,21 @@
 import pathlib
 import json
+import itertools
 
 import pytest
 from nqm.iotdatabase.database import Database
+
+def limit(iterable, limit_val):
+    return itertools.islice(iterable, None, limit_val)
+
+def skip(iterable, skip_val):
+    return itertools.islice(iterable, skip_val, None)
+
+DEFAULT_LIMIT = 3
+"""
+We limit queries by default,
+as the OS can only open so many np arrays at once before throwing an OSError
+"""
 
 def json_dbinfo(jsonfilepath="tdx-schemas.json"):
     with pathlib.Path(__file__).with_name(jsonfilepath).open() as jsonfile:
@@ -80,32 +93,39 @@ def filterfunc_mongofilter(request):
 @pytest.mark.dependency()
 def test_getqueryopts(dataDb, row_equal, filterfunc_mongofilter):
     db, data, key = dataDb
+
+    limit_val = DEFAULT_LIMIT
     sortedData = sorted(data, key=lambda row: row[key])
 
     filterfunc, mongofilter = filterfunc_mongofilter
 
     savedData = db.getData(
         filter={key: mongofilter},
-        options={"sort": {key: 1}}).data
-    for row, getDataRow in zip(
-        savedData, filter(lambda x: filterfunc(x[key]), sortedData)
-    ):
+        options={"sort": {key: 1}, "limit": limit_val}).data
+    filteredData = filter(lambda x: filterfunc(x[key]), sortedData)
+    expectedData = tuple(limit(filteredData, limit_val))
+    for row, getDataRow in zip(savedData, expectedData):
         row_equal(row, getDataRow)
 
 @pytest.mark.dependency(depends=["test_getqueryopts"])
 def test_getqueryopts_skip(dataDb, row_equal, filterfunc_mongofilter):
     db, data, key = dataDb
+
+    limit_val = DEFAULT_LIMIT
     sortedData = sorted(data, key=lambda row: row[key])
 
     filterfunc, mongofilter = filterfunc_mongofilter
 
-    for skip in (0, 2, 4):
+    for skip_val in (0, 2, 4):
         savedData = db.getData(
             filter={key: mongofilter},
-            options={"sort": {key: 1}, "skip": skip}).data
-        filteredData = tuple(
-            filter(lambda x: filterfunc(x[key]), sortedData)
-        )[skip:]
+            options={
+                "sort": {key: 1}, "skip": skip_val, "limit": limit_val
+            }).data
+        filteredData = tuple(limit(skip(
+            filter(lambda x: filterfunc(x[key]), sortedData),
+            skip_val,
+        ), limit_val))
 
         assert len(savedData) == len(filteredData)
         for row, getDataRow in zip(
@@ -129,7 +149,7 @@ def test_getlogicalquery(dataDb, row_equal):
 
     for filterfunc, mongofilter in filterfunc_mongofilters:
         # expect warning since logical operators might do weird stuff
-        with pytest.warns(RuntimeWarning): 
+        with pytest.warns(RuntimeWarning):
             savedData = db.getData(
                 filter=mongofilter,
                 options={"sort": {key: 1}}).data
