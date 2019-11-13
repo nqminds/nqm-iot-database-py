@@ -355,6 +355,17 @@ testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xm
 
 [[package]]
 category = "dev"
+description = "Manage dependencies of tests"
+name = "pytest-dependency"
+optional = false
+python-versions = "*"
+version = "0.4.0"
+
+[package.dependencies]
+pytest = ">=3.6.0"
+
+[[package]]
+category = "dev"
 description = "World timezone definitions, modern and historical"
 name = "pytz"
 optional = false
@@ -621,7 +632,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pathlib2", "contextlib2", "unittest2"]
 
 [metadata]
-content-hash = "7ef7e39c0a88e666a091c70f70fed5399c40a8ae8c236f5473c598bea6016a28"
+content-hash = "eb8f9d2547a9a1cd49fbc6eb28c39ccecbc28f03d682d2e4cadd53f81b1e6f9b"
 python-versions = "^3.6"
 
 [metadata.files]
@@ -862,6 +873,9 @@ pyparsing = [
 pytest = [
     {file = "pytest-5.2.2-py3-none-any.whl", hash = "sha256:58cee9e09242937e136dbb3dab466116ba20d6b7828c7620f23947f37eb4dae4"},
     {file = "pytest-5.2.2.tar.gz", hash = "sha256:27abc3fef618a01bebb1f0d6d303d2816a99aa87a5968ebc32fe971be91eb1e6"},
+]
+pytest-dependency = [
+    {file = "pytest-dependency-0.4.0.tar.gz", hash = "sha256:bda0ef48e6a44c091399b12ab4a7e580d2dd8294c222b301f88d7d57f47ba142"},
 ]
 pytz = [
     {file = "pytz-2019.3-py2.py3-none-any.whl", hash = "sha256:1c557d7d0e871de1f5ccd5833f60fb2550652da6be2693c1e02300743d21500d"},

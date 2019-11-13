@@ -89,7 +89,7 @@ a = 89; b = 12; c = [a, b, 50]
 def filterfunc_mongofilter(request):
     return request.param
 
-@pytest.mark.dependency()
+@pytest.mark.dependency(name="test_getqueryopts")
 def test_getqueryopts(dataDb, data_equal, filterfunc_mongofilter):
     db, data, key = dataDb
 
