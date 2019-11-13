@@ -67,7 +67,7 @@ poetry run make doctest
 ### Linting
 
 ```bash
-poetry run pylint nqm
+poetry run pre-commit run --all-files
 ```
 
 ## Possible upgrades to make in SQLAlchemy
