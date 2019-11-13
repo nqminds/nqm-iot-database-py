@@ -112,7 +112,7 @@ class Database(object):
                 schema definition. Should contain two fields:
 
                 * ``dataSchema``: A dict containing the TDX data schema.
-                
+
                 * ``uniqueIndex``:
                     List of ``{"asc": column}`` or ``{"desc": column}``
                     specifying the unique primary key index.
@@ -155,7 +155,7 @@ class Database(object):
             info = kargs
             info[SCHEMA_KEY] = tdx_schema
             info["id"] = id
-            
+
             _sqliteinfotable.setInfoKeys(db_engine, info)
 
         self._load_tdx_schema()
@@ -451,7 +451,7 @@ class Database(object):
         mongosql_filter = self._convertFilterToSQLite(filter)
 
         session = self.session_maker()
-        mongoquery = mongosql.MongoQuery.get_for(
+        mongoquery = mongosql.MongoQuery(
             self.table_model,
             session.query(self.table_model),
         ).query(
@@ -511,7 +511,7 @@ class Database(object):
         session = self.session_maker()
         DataModel = self.table_model
 
-        mongoquery = mongosql.MongoQuery.get_for(
+        mongoquery = mongosql.MongoQuery(
             DataModel,
             session.query(DataModel),
         ).query(
