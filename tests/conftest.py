@@ -4,6 +4,22 @@ import pytest
 import nqm.iotdatabase._sqliteconstants as _sqliteconstants
 import nqm.iotdatabase._sqliteschemaconverter as _sqliteschemaconverter
 
+def _data_equal(actual_data, expected_data):
+    actual_data_length = len(actual_data)
+    try:
+        expected_data_length = len(expected_data)
+    except TypeError:
+        expected_data = tuple(expected_data)
+        expected_data_length = len(expected_data)
+
+    assert actual_data_length == expected_data_length
+    for row, expected_row in zip(actual_data, expected_data):
+        _row_equal(row, expected_row)
+
+@pytest.fixture(scope="session")
+def data_equal():
+    return _data_equal
+
 def _row_equal(row1, row2):
     assert len(row1) == len(row2)
     for col, val in row1.items():

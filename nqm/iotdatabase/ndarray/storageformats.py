@@ -25,11 +25,9 @@ def make_prefix() -> typing.Text:
     unix_bytes = unix_time_ms.to_bytes(8, byteorder="big")
     return base64.urlsafe_b64encode(unix_bytes).decode("ascii")
 
-STORAGE_TYPES = {}
 class NDArrayStorage(abc.ABC):
     """Abstract Base Class for classes that save/load NDArrays.
     """
-    storage_types = STORAGE_TYPES
 
     @classmethod
     @abc.abstractmethod
@@ -70,6 +68,8 @@ class NDArrayStorage(abc.ABC):
                 it is relative to this absolute path.
         """
 
+STORAGE_TYPES: typing.Dict[str, typing.Type[NDArrayStorage]] = {}
+
 class FileStorage(NDArrayStorage):
     """Stores the ndarray as a raw binary file"""
     code = "f"
@@ -94,7 +94,7 @@ class FileStorage(NDArrayStorage):
                     "`ulimit -n` by typing in `ulimit -n $NEWLIMIT`. "
                     "The new limit should be at least 2.5x the amount of data "
                     "you want to get an once."),
-                    filename=path) from e
+                    path) from e
             raise e
     @classmethod
     def save(cls, array: np.ndarray, relative_loc="") -> NDArray:

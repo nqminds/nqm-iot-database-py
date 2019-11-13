@@ -16,7 +16,7 @@ def saveNDArray(
         array: np.ndarray,
         relative_loc: Path = "",
         storage_method: ty.Text = "",
-):
+) -> NDArray:
     """Saves an array.
 
     Args:
@@ -24,6 +24,9 @@ def saveNDArray(
         relative_loc: Relative location of any filepaths.
         storage_method: Pick the storage version to use.
             default is pick automatically.
+
+    Returns:
+        The metadata of the saved numpy array.
     """
     storage_class = None
     if not storage_method:
@@ -72,4 +75,4 @@ def deleteNDArray(metadata: NDArray, relative_loc: Path = "") -> None:
         raise NotImplementedError(
             f"Deleting NDArray with version {metadata.v} failed!"
             f"Only versions {STORAGE_TYPES.keys()} are supported.")
-    return storage_class.delete(metadata, relative_loc)
+    storage_class.delete(metadata, relative_loc)

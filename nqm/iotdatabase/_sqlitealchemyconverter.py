@@ -70,12 +70,12 @@ def makeIndexArg(
     elif sort_order is _sqliteconstants.TDX_SORT_TYPE.ASC:
         sort_condition = column.asc()
 
-    return column 
+    return column
 
 def makeIndexes(
-    columns: t.Mapping[t.Text, sqlalchemy.sql.expression.ColumnElement],
+    columns: t.MutableMapping[t.Text, sqlalchemy.sql.expression.ColumnElement],
     tdx_schema: schemaconverter.TDXSchema
-) -> t._NoReturn:
+) -> None:
     """Makes the unique and non-unique indexes for a inplace.
 
     Args:

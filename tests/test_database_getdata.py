@@ -1,8 +1,22 @@
 import pathlib
 import json
+import itertools
+import typing
 
 import pytest
 from nqm.iotdatabase.database import Database
+
+def limit(iterable, limit_val):
+    return itertools.islice(iterable, None, limit_val)
+
+def skip(iterable, skip_val):
+    return itertools.islice(iterable, skip_val, None)
+
+DEFAULT_LIMIT = 3
+"""
+We limit queries by default,
+as the OS can only open so many np arrays at once before throwing an OSError
+"""
 
 def json_dbinfo(jsonfilepath="tdx-schemas.json"):
     with pathlib.Path(__file__).with_name(jsonfilepath).open() as jsonfile:
@@ -46,16 +60,14 @@ def test_getlimitdata(dataDb):
         loadedData = db.getData(options={"limit": limit}).data
         assert len(loadedData) == len(data)
 
-def test_getsorteddata(dataDb, row_equal):
+def test_getsorteddata(dataDb, data_equal):
     db, data, key = dataDb
     for sort in +1, -1:
         sortedData = sorted(data,
             key=lambda row: row[key],
             reverse=sort == -1)
         sortedSavedData = db.getData(options={"sort": {key: sort}}).data
-        assert len(sortedData) == len(sortedSavedData)
-        for i in range(len(sortedData)):
-            row_equal(sortedData[i], sortedSavedData[i])
+        data_equal(sortedSavedData, sortedData)
 
 def test_invalidoption(dataDb):
     db, data, key = dataDb
@@ -77,66 +89,88 @@ a = 89; b = 12; c = [a, b, 50]
 def filterfunc_mongofilter(request):
     return request.param
 
-@pytest.mark.dependency()
-def test_getqueryopts(dataDb, row_equal, filterfunc_mongofilter):
+@pytest.mark.dependency(name="test_getqueryopts")
+def test_getqueryopts(dataDb, data_equal, filterfunc_mongofilter):
     db, data, key = dataDb
+
+    limit_val = DEFAULT_LIMIT
     sortedData = sorted(data, key=lambda row: row[key])
 
     filterfunc, mongofilter = filterfunc_mongofilter
 
     savedData = db.getData(
         filter={key: mongofilter},
-        options={"sort": {key: 1}}).data
-    for row, getDataRow in zip(
-        savedData, filter(lambda x: filterfunc(x[key]), sortedData)
-    ):
-        row_equal(row, getDataRow)
+        options={"sort": {key: 1}, "limit": limit_val}).data
+    filteredData = filter(lambda x: filterfunc(x[key]), sortedData)
+    expectedData = limit(filteredData, limit_val)
+    data_equal(savedData, expectedData)
 
 @pytest.mark.dependency(depends=["test_getqueryopts"])
-def test_getqueryopts_skip(dataDb, row_equal, filterfunc_mongofilter):
+def test_getqueryopts_skip(dataDb, data_equal, filterfunc_mongofilter):
     db, data, key = dataDb
+
+    limit_val = DEFAULT_LIMIT
     sortedData = sorted(data, key=lambda row: row[key])
 
     filterfunc, mongofilter = filterfunc_mongofilter
 
-    for skip in (0, 2, 4):
+    for skip_val in (0, 2, 4):
         savedData = db.getData(
             filter={key: mongofilter},
-            options={"sort": {key: 1}, "skip": skip}).data
-        filteredData = tuple(
-            filter(lambda x: filterfunc(x[key]), sortedData)
-        )[skip:]
+            options={
+                "sort": {key: 1}, "skip": skip_val, "limit": limit_val
+            }).data
+        filteredData = limit(skip(
+            filter(lambda x: filterfunc(x[key]), sortedData),
+            skip_val,
+        ), limit_val)
 
-        assert len(savedData) == len(filteredData)
-        for row, getDataRow in zip(
-            savedData, filteredData
-        ):
-            row_equal(row, getDataRow)
+        data_equal(savedData, filteredData)
+
+class Filter(typing.NamedTuple):
+    filterfunc: typing.Callable[[typing.Any], bool]
+    mongofilter: typing.Mapping[str, typing.Any]
+
+class FilterFactory(typing.NamedTuple):
+    make: typing.Callable[[str], Filter]
+    def __repr__(self):
+        mongofilter = self.make("key").mongofilter
+        classname = type(self).__name__
+        return f"{classname}(make={self.make}, mongofilter={mongofilter})"
+
+logical_filter_factories = [FilterFactory(maker) for maker in [
+    lambda key: Filter(
+        lambda x: x[key] > 12 and x[key] <= 26,
+        {"$and": [{key: {"$gt": 12}}, {key: {"$lte": 26}}]},
+    ),
+    lambda key: Filter(
+        lambda x: x[key] < 12 or x[key] > 95,
+        {"$or": [{key: {"$lt": 12}}, {key: {"$gt": 95}}]},
+    ),
+    lambda key: Filter(
+        lambda x: x[key] < 12 and not x[key] < 6,
+        {"$and": [{key: {"$lt": 12}}, {"$not": {key: {"$lt": 6}}}]},
+    ),
+]]
+
+@pytest.fixture(params=logical_filter_factories)
+def logical_filter_factory(request) -> FilterFactory:
+    return request.param
 
 @pytest.mark.dependency(depends=["test_getqueryopts"])
-def test_getlogicalquery(dataDb, row_equal):
+def test_getlogicalquery(dataDb, data_equal, logical_filter_factory):
     db, data, key = dataDb
     sortedData = sorted(data, key=lambda row: row[key])
+    logical_filter = logical_filter_factory.make(key)
 
-    filterfunc_mongofilters = (
-        (lambda x: x[key] > 12 and x[key] <= 26,
-            {"$and": [{key: {"$gt": 12}}, {key: {"$lte": 26}}]}),
-        (lambda x: x[key] < 12 or x[key] > 95,
-            {"$or": [{key: {"$lt": 12}}, {key: {"$gt": 95}}]}),
-        (lambda x: x[key] < 12 and not x[key] < 6,
-            {"$and": [{key: {"$lt": 12}}, {key: {"$gt": 95}}]}),
-    )
+    # expect warning since logical operators might do weird stuff
+    with pytest.warns(RuntimeWarning):
+        savedData = db.getData(
+            filter=logical_filter.mongofilter,
+            options={"sort": {key: 1}}).data
+    expected_data = filter(logical_filter.filterfunc, sortedData)
 
-    for filterfunc, mongofilter in filterfunc_mongofilters:
-        # expect warning since logical operators might do weird stuff
-        with pytest.warns(RuntimeWarning): 
-            savedData = db.getData(
-                filter=mongofilter,
-                options={"sort": {key: 1}}).data
-        for row, getDataRow in zip(
-            savedData, filter(filterfunc, sortedData)
-        ):
-            row_equal(row, getDataRow)
+    data_equal(savedData, expected_data)
 
 def projections(fields, project={}):
     for projectVal in 0, 1:

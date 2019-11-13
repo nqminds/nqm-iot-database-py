@@ -3,7 +3,7 @@
 import typing as t
 import numbers
 import json
-import collections
+import collections.abc
 import os
 
 from . import _sqliteconstants
@@ -75,7 +75,7 @@ def getBasicType(
         return SQLITE_TYPE.NUMERIC
 
     # map of base types to functions that return the sqlite type
-    mapping: t.Dict[TDX_TYPE, t.Callable[[], SQLITE_TYPE]] = {
+    mapping: t.Dict[TDX_TYPE, t.Callable[[], GeneralSQLiteVal]] = {
         TDX_TYPE.STRING: lambda: SQLITE_TYPE.TEXT,
         TDX_TYPE.BOOLEAN: lambda: SQLITE_TYPE.NUMERIC,
         TDX_TYPE.DATE: lambda: SQLITE_TYPE.NUMERIC,
@@ -123,9 +123,9 @@ def _convertSchemaOne(
     """Used in convertSchema"""
     # I don't actually understand what this does, I just ported
     # it from @mereacre's code (🇲🇩 🧛 🔮 Moldovan Vampyre Magick)
-    if isinstance(value, collections.Sequence):
+    if isinstance(value, collections.abc.Sequence):
         return _sqliteconstants.SQLITE_GENERAL_TYPE.ARRAY
-    if isinstance(value, collections.Mapping):
+    if isinstance(value, collections.abc.Mapping):
         real_type = value.get(str(TDX_TYPE.NAME), None)
         if real_type is not None:
             return getBasicType(real_type)
@@ -161,7 +161,6 @@ def convertRowToSqlite(
         The converted row in SQLite types.
     """
     converted_row = {}
-    sqlite_type = None
     for col, val in row.items():
         try:
             sqlite_type = schema[col]
@@ -251,7 +250,7 @@ def convertRowToTdx(
 
 def convertToTdx(
         type: GeneralSQLOrStr,
-        value: t.Text,
+        value: SQLVal,
         data_dir: t.Union[t.Text, os.PathLike] = "",
 ) -> JSONified:
     """Converts a sqlite value to a tdx value based on a sqlite type.

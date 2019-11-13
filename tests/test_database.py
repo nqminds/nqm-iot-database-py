@@ -64,7 +64,7 @@ def db(inmemdb, schema):
     inmemdb.createDatabase(schema=schema)
     return inmemdb
 
-@pytest.mark.dependency(depends=["test_create_dataset"])
+@pytest.mark.dependency(name="test_insert_dataset")
 def test_insert_dataset(db, schema, make_data):
     number = 100
     data = make_data(schema, number)

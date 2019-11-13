@@ -1,5 +1,4 @@
 import pytest
-import collections
 import itertools
 import typing
 import json
@@ -8,9 +7,10 @@ import pathlib
 import nqm.iotdatabase._sqliteschemaconverter as sqliteschemaconverter
 
 # stores the params needed for a call of test_convertSchema()
-ConvertSchemaParam = collections.namedtuple(
-    "ConvertSchemaParam",
-    field_names="tdx,general,sqlite")
+class ConvertSchemaParam(typing.NamedTuple):
+    tdx: typing.Mapping
+    general: typing.Mapping
+    sqlite: typing.Mapping
 
 def _convertSchemaParams():
     """Returns an iterator containing the params for test_convertSchema()"""

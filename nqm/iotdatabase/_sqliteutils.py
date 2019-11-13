@@ -24,7 +24,7 @@ def sqliteURI(
     """ Creates a URI for opening an SQLite Connection
 
     See https://www.sqlite.org/uri.html.
-    
+
     Args:
         path: The path of the db.
         type: The type of the db: `"file"` or `"memory"`.
@@ -39,14 +39,14 @@ def sqliteURI(
     }
     dbType = DbTypeEnum(type)
     dbMode = DbModeEnum(mode)
-    if dbType is DbTypeEnum.file:
-        path = os.path.abspath(path)
     if not path:
         if dbType is DbTypeEnum.memory:
             path = ":memory:" # make an unshared in-memory db
         else:
             raise TypeError(
                 f"path={path} is must be a truthy value of type={type}.")
+    if dbType is DbTypeEnum.file:
+        path = os.path.abspath(path)
     return urllib.parse.urlunparse(urllib.parse.ParseResult(
         scheme="file",
         netloc="localhost",
