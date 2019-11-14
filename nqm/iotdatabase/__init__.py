@@ -27,4 +27,4 @@ Example:
 """
 from .database import Database
 
-__version__ = "1.1.4"
+__version__ = "1.1.5"
