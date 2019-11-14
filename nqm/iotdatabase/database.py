@@ -494,10 +494,8 @@ class Database(object):
 
         session = self.session_maker()
 
-        mongosql_projection = projection
-        if not projection:
-            # in mongosql, an empty projection means don't return anything
-            mongosql_projection = None
+        # in mongosql, an empty projection means don't return anything
+        mongosql_projection = projection if projection else None
 
         mongoquery = self._mongo_query(session).query(
             filter=mongosql_filter, project=mongosql_projection, **query_opts,
