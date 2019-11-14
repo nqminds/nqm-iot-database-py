@@ -1,5 +1,10 @@
 # nqm-iot-database-utils-python
 
+<p align="center">
+  <a href="https://pypi.org/project/nqm.iotdatabase/"><img alt="PyPI" src="https://img.shields.io/pypi/v/nqm.iotdatabase"></a>
+  <a href="https://pypi.org/project/nqm.iotdatabase/"><img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/nqm.iotdatabase"></a>
+</p>
+
 Python port of
 [`nqminds/nqm-iot-database-utils`][1]
 
