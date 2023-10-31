@@ -10,7 +10,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v1
       with:
-        python-version: 3.x
+        python-version: 3.8
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pre-commit
@@ -22,7 +22,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.7, 3.8]
     needs: lint
     steps:
     - uses: actions/checkout@v1
@@ -32,7 +32,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade poetry
+        python -m pip install --upgrade poetry==0.12.17
         python -m poetry install
         sudo apt-get update -qq && sudo apt-get install -qq libimage-exiftool-perl
     - name: Test with pytest
