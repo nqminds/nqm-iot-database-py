@@ -2,7 +2,8 @@
 name = "nqm.iotdatabase"
 version = "1.1.5"
 description = "Library for accessing a local nqm-iot-database"
-authors = ["Alois Klink <alois.klink@gmail.com>"]
+authors = ["Alois Klink <alois@nquiringminds.com>"]
+maintainers = ["Ashley Setter <ash@nquiringminds.com>"]
 readme = "README.md"
 repository = "https://github.com/nqminds/nqm-iot-database-py"
 homepage = "https://github.com/nqminds/nqm-iot-database-py"
